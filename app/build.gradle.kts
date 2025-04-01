@@ -51,7 +51,8 @@ dependencies {
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
     implementation(libs.androidx.security.crypto)       // For androidx.security:security-crypto
-    implementation(libs.androidx.security.crypto.ktx)   // For androidx.security:security-crypto-ktx
+    implementation(libs.androidx.security.crypto.ktx)
+    implementation(libs.androidx.room.common)   // For androidx.security:security-crypto-ktx
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
