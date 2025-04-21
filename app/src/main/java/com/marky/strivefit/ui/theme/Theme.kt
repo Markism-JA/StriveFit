@@ -1,6 +1,5 @@
 package com.marky.strivefit.ui.theme
 
-import android.app.Activity
 import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
@@ -10,34 +9,125 @@ import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.sp
+import androidx.compose.material3.Typography
+
+//Typography
+val displayLarge = TextStyle(
+    fontFamily = PlusJakartaSansFontFamily,
+    fontWeight = FontWeight.Bold,
+    fontSize = 57.sp,
+    lineHeight = 64.sp
+)
+
+val displayMedium = TextStyle(
+    fontFamily = PlusJakartaSansFontFamily,
+    fontWeight = FontWeight.Bold,
+    fontSize = 45.sp,
+    lineHeight = 52.sp
+)
+
+val headlineLarge = TextStyle(
+    fontFamily = PlusJakartaSansFontFamily,
+    fontWeight = FontWeight.Bold,
+    fontSize = 32.sp,
+    lineHeight = 40.sp
+)
+
+val headlineMedium = TextStyle(
+    fontFamily = PlusJakartaSansFontFamily,
+    fontWeight = FontWeight.SemiBold,
+    fontSize = 28.sp,
+    lineHeight = 36.sp
+)
+
+val titleLarge = TextStyle(
+    fontFamily = PlusJakartaSansFontFamily,
+    fontWeight = FontWeight.SemiBold,
+    fontSize = 22.sp,
+    lineHeight = 28.sp
+)
+
+val titleMedium = TextStyle(
+    fontFamily = PlusJakartaSansFontFamily,
+    fontWeight = FontWeight.SemiBold,
+    fontSize = 16.sp,
+    lineHeight = 24.sp
+)
+
+val bodyLarge = TextStyle(
+    fontFamily = DMSansFontFamily,
+    fontWeight = FontWeight.Normal,
+    fontSize = 16.sp,
+    lineHeight = 24.sp
+)
+
+val bodyMedium = TextStyle(
+    fontFamily = DMSansFontFamily,
+    fontWeight = FontWeight.Normal,
+    fontSize = 14.sp,
+    lineHeight = 20.sp
+)
+
+val labelLarge = TextStyle(
+    fontFamily = DMSansFontFamily,
+    fontWeight = FontWeight.Medium,
+    fontSize = 14.sp,
+    lineHeight = 20.sp
+)
+
+val labelSmall = TextStyle(
+    fontFamily = DMSansFontFamily,
+    fontWeight = FontWeight.Medium,
+    fontSize = 11.sp,
+    lineHeight = 16.sp
+)
+
+val StriveFitTypography = Typography(
+    displayLarge = displayLarge,
+    displayMedium = displayMedium,
+    headlineLarge = headlineLarge,
+    headlineMedium = headlineMedium,
+    titleLarge = titleLarge,
+    titleMedium = titleMedium,
+    bodyLarge = bodyLarge,
+    bodyMedium = bodyMedium,
+    labelLarge = labelLarge,
+    labelSmall = labelSmall
+)
 
 private val DarkColorScheme = darkColorScheme(
-    primary = Purple80,
-    secondary = PurpleGrey80,
-    tertiary = Pink80
+    primary = DefaultDark.primary,
+    primaryContainer = DefaultDark.primaryContainer,
+    secondary = DefaultDark.secondary,
+    background = DefaultDark.background,
+    surface = DefaultDark.surface,
+    onPrimary = CommonColors.onPrimary,
+    surfaceVariant = DefaultDark.surfaceElevated,
+    outline = CommonColors.borderDark,
+    onBackground = CommonDark.onBackground,
 )
+
 
 private val LightColorScheme = lightColorScheme(
-    primary = Purple40,
-    secondary = PurpleGrey40,
-    tertiary = Pink40
-
-    /* Other default colors to override
-    background = Color(0xFFFFFBFE),
-    surface = Color(0xFFFFFBFE),
-    onPrimary = Color.White,
-    onSecondary = Color.White,
-    onTertiary = Color.White,
-    onBackground = Color(0xFF1C1B1F),
-    onSurface = Color(0xFF1C1B1F),
-    */
+    primary = DefaultLight.primary,
+    primaryContainer = DefaultLight.primaryContainer,
+    secondary = DefaultLight.secondary,
+    background = DefaultLight.background,
+    surface = DefaultLight.surface,
+    onPrimary = CommonColors.onPrimary,
+    surfaceVariant = DefaultLight.surfaceElevated,
+    outline = CommonColors.borderLight,
+    onBackground = CommonLight.onBackground,
 )
+
 
 @Composable
 fun StriveFitTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
-    // Dynamic color is available on Android 12+
-    dynamicColor: Boolean = true,
+    dynamicColor: Boolean = false,
     content: @Composable () -> Unit
 ) {
     val colorScheme = when {
@@ -51,7 +141,7 @@ fun StriveFitTheme(
 
     MaterialTheme(
       colorScheme = colorScheme,
-      typography = Typography,
+      typography = StriveFitTypography,
       content = content
     )
 }

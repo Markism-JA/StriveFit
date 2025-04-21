@@ -1,26 +1,39 @@
 [versions]
 agp = "8.9.1"
+androidIconics = "3.0.4"
+coreSplashscreen = "1.0.1"
 hiltAndroid = "2.44"
 hiltCompiler = "2.44"
 hiltLifecycleViewmodel = "1.0.0-alpha03"
+iconsLucide = "1.0.0"
 kotlin = "2.0.21"
-coreKtx = "1.15.0"
+coreKtx = "1.16.0"
 junit = "4.13.2"
 junitVersion = "1.2.1"
 espressoCore = "3.6.1"
 lifecycleRuntimeKtx = "2.8.7"
 activityCompose = "1.10.1"
-composeBom = "2025.03.01"
-securityCrypto = "1.1.0-alpha06"
+composeBom = "2025.04.00"
+navigationCompose = "2.8.9"
+securityCrypto = "1.1.0-alpha07"
 securityCryptoKtx = "1.0.0"
-roomCommon = "2.6.1"
+roomCommon = "2.7.0"
+supportAnnotations = "28.0.0"
+uiTextGoogleFonts = "1.7.8"
+annotation = "1.9.1"
+supportAnnotationsVersion = "28.0.0"
 
 [libraries]
+android-iconics = { module = "com.github.mikepenz:Android-Iconics", version.ref = "androidIconics" }
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
+androidx-core-splashscreen = { module = "androidx.core:core-splashscreen", version.ref = "coreSplashscreen" }
 androidx-hilt-lifecycle-viewmodel = { module = "androidx.hilt:hilt-lifecycle-viewmodel", version.ref = "hiltLifecycleViewmodel" }
+androidx-navigation-compose = { module = "androidx.navigation:navigation-compose", version.ref = "navigationCompose" }
 androidx-security-crypto = { module = "androidx.security:security-crypto", version.ref = "securityCrypto" }
-hilt-android = { module = "com.google.daggger:hilt-android", version.ref = "hiltAndroid" }
+androidx-ui-text-google-fonts = { module = "androidx.compose.ui:ui-text-google-fonts", version.ref = "uiTextGoogleFonts" }
+hilt-android = { module = "com.google.dagger:hilt-android", version.ref = "hiltAndroid" }
 hilt-compiler = { module = "com.google.dagger:hilt-compiler", version.ref = "hiltCompiler" }
+icons-lucide = { module = "com.composables:icons-lucide", version.ref = "iconsLucide" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
 androidx-junit = { group = "androidx.test.ext", name = "junit", version.ref = "junitVersion" }
 androidx-espresso-core = { group = "androidx.test.espresso", name = "espresso-core", version.ref = "espressoCore" }
@@ -36,9 +49,12 @@ androidx-ui-test-junit4 = { group = "androidx.compose.ui", name = "ui-test-junit
 androidx-material3 = { group = "androidx.compose.material3", name = "material3" }
 androidx-security-crypto-ktx = { group = "androidx.security", name = "security-crypto-ktx", version.ref = "securityCryptoKtx" }
 androidx-room-common = { group = "androidx.room", name = "room-common", version.ref = "roomCommon" }
+androidx-annotation = { group = "androidx.annotation", name = "annotation", version.ref = "annotation" }
+support-annotations = { group = "com.android.support", name = "support-annotations", version.ref = "supportAnnotationsVersion" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
 kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
 kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
+hilt = { id = "com.google.dagger.hilt.android", version = "2.44" }
 

@@ -40,24 +40,47 @@ android {
 }
 
 dependencies {
-    implementation(libs.androidx.hilt.lifecycle.viewmodel)
+    // Hilt
     implementation(libs.hilt.android)
+    implementation(libs.androidx.hilt.lifecycle.viewmodel)
+
+    // AndroidX & Kotlin
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)
+
+    // Jetpack Compose
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.ui)
     implementation(libs.androidx.ui.graphics)
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
-    implementation(libs.androidx.security.crypto)       // For androidx.security:security-crypto
-    implementation(libs.androidx.security.crypto.ktx)
-    implementation(libs.androidx.room.common)   // For androidx.security:security-crypto-ktx
+
+    // Security
+    implementation(libs.androidx.security.crypto) // ✅ KEEP ONLY THIS
+
+    // Room (not sure if you're using full Room or just annotations)
+    implementation(libs.androidx.room.common)
+    implementation(libs.androidx.annotation)
+    implementation(libs.support.annotations)
+
+    // Testing
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(platform(libs.androidx.compose.bom))
     androidTestImplementation(libs.androidx.ui.test.junit4)
+
+    // Debug tools
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
+
+    //Font
+    implementation(libs.androidx.ui.text.google.fonts)
+
+    implementation(libs.androidx.core.splashscreen)
+
+    //Icon
+    implementation(libs.icons.lucide)
+    implementation(libs.androidx.navigation.compose)
 }

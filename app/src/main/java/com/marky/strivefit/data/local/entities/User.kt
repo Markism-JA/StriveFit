@@ -1,15 +1,20 @@
 package com.marky.strivefit.data.local.entities
 
 import androidx.room.Entity
+import androidx.room.Index
 import androidx.room.PrimaryKey
-import java.sql.Timestamp
 
-@Entity(tableName = "user")
-class User (
-    @PrimaryKey(autoGenerate = true) val id: Int = 0,
-    val username: String,
-    val uuid: String,
-    val sex: String,
-    val email: String,
-    val created_at: Long
+@Entity(
+    tableName = "User",
+    indices = [Index(value = ["email"], unique = true)]
 )
+data class User (
+    @PrimaryKey(autoGenerate = true) val id: Int,
+    val username: String,
+    val uuid: String?,
+    val sex: String,
+    val email: String?,
+    val createdAt: String
+)
+
+

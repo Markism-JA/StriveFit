@@ -1,0 +1,8 @@
+jdk:
+  - openjdk17
+node:
+  version: 16.20.0
+before_install:
+  - sdk update
+install:
+  - ./gradlew clean -Pgroup=com.github.adamglin0 -Pversion=$VERSION publishToMavenLocal -xdokkaHtml
