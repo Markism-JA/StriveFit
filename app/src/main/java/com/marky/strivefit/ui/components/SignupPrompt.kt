@@ -13,8 +13,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import com.marky.strivefit.ui.theme.StriveFitTheme
 
 @Composable
-fun LoginPrompt(
-    onLoginClick: () -> Unit,
+fun SignupPrompt(
+    onSignupClick: () -> Unit,
     animationTriggered: Boolean,
     modifier: Modifier = Modifier
 ) {
@@ -38,20 +38,22 @@ fun LoginPrompt(
             }
     ) {
         Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.Center,
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                text = "Already have an account? ",
+                text = "Don't have an account? ",
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onBackground
             )
             Text(
-                text = "Log In",
+                text = "Sign Up",
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.primary,
                 modifier = Modifier
                     .padding(start = 4.dp)
-                    .clickable(onClick = onLoginClick),
+                    .clickable(onClick = onSignupClick),
             )
         }
     }
@@ -59,11 +61,11 @@ fun LoginPrompt(
 
 @Preview(showBackground = true)
 @Composable
-fun LoginPromptPreview() {
+fun SignupPromptPreview() {
     StriveFitTheme {
         Surface {
-            LoginPrompt(
-                onLoginClick = {},
+            SignupPrompt(
+                onSignupClick = {},
                 animationTriggered = true
             )
         }

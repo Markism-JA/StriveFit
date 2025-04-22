@@ -16,7 +16,6 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -27,6 +26,7 @@ import com.marky.strivefit.ui.components.AnimatedCustomButton
 import com.marky.strivefit.ui.components.GoBackButton
 import com.marky.strivefit.ui.theme.StriveFitTheme
 import com.composables.icons.lucide.*
+import com.marky.strivefit.ui.components.SignupPrompt
 import com.marky.strivefit.ui.components.icon.GoogleIcon
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -36,7 +36,8 @@ fun Login(
     onBackClick: () -> Unit = {},
     onLoginClick: () -> Unit = {},
     onGoogleLoginClick: () -> Unit = {},
-    onForgotPasswordClick: () -> Unit = {}
+    onForgotPasswordClick: () -> Unit = {},
+    onSignupClick: () -> Unit = {}
 ) {
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
@@ -200,25 +201,20 @@ fun Login(
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                // Don't have an account? section
+
                 Row(
-                    modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.Center,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text(
-                        text = "Don't have an account?",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onBackground
+                    SignupPrompt(
+                        onSignupClick = {
+                            onSignupClick()
+                        },
+                        animationTriggered = true,
+                        modifier = Modifier.padding(top = 24.dp)
                     )
-                    TextButton(onClick = onBackClick) {
-                        Text(
-                            text = "Sign Up",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.primary
-                        )
-                    }
                 }
+
             }
         }
     }
