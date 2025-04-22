@@ -1,4 +1,4 @@
-package com.marky.strivefit.ui.screens
+package com.marky.strivefit.ui.screens.onBoarding
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -9,8 +9,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.marky.strivefit.ui.components.*
 import com.marky.strivefit.ui.modifiers.ScreenAlignments
-import com.marky.strivefit.ui.modifiers.ScreenModifiers
-import com.marky.strivefit.ui.screens.auth.SignUp
 import com.marky.strivefit.ui.theme.StriveFitTheme
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch

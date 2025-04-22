@@ -14,7 +14,11 @@ data class User (
     val uuid: String?,
     val sex: String,
     val email: String?,
-    val createdAt: String
+    val createdAt: String,
+    val height: Double,
+    val weight: Int,
+    val age: Int,
+    val fullname: String
 )
 
 

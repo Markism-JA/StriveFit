@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">StriveFit</string>
+    <string id = "email" name="email">Email</string>
 </resources>

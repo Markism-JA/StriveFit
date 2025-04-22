@@ -1,7 +1,6 @@
-package com.marky.strivefit.ui.screens.auth
+package com.marky.strivefit.ui.screens.onBoarding
 
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -9,23 +8,20 @@ import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.*
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.input.PasswordVisualTransformation
-import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.marky.strivefit.ui.components.AnimatedCustomButton
+import com.marky.strivefit.ui.components.FormField
 import com.marky.strivefit.ui.components.GoBackButton
 import com.marky.strivefit.ui.theme.StriveFitTheme
-import com.composables.icons.lucide.*
+import com.marky.strivefit.ui.components.PasswordField
 import com.marky.strivefit.ui.components.SignupPrompt
 import com.marky.strivefit.ui.components.icon.GoogleIcon
 import kotlinx.coroutines.delay
@@ -43,11 +39,9 @@ fun Login(
     var password by remember { mutableStateOf("") }
     var isPasswordVisible by remember { mutableStateOf(false) }
 
-    // Field focus states for animations
     var isEmailFocused by remember { mutableStateOf(false) }
     var isPasswordFocused by remember { mutableStateOf(false) }
 
-    // Animation states for form entrance
     val scope = rememberCoroutineScope()
     var isVisible by remember { mutableStateOf(false) }
 
@@ -100,7 +94,6 @@ fun Login(
 
                 Spacer(modifier = Modifier.height(32.dp))
 
-                // Form fields with animations
                 FormField(
                     label = "Email",
                     value = email,
@@ -217,103 +210,6 @@ fun Login(
 
             }
         }
-    }
-}
-
-@Composable
-private fun FormField(
-    label: String,
-    value: String,
-    onValueChange: (String) -> Unit,
-    keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
-    isFocused: Boolean,
-    onFocusChanged: (Boolean) -> Unit
-) {
-    val borderWidth by animateFloatAsState(
-        targetValue = if (isFocused) 2f else 1f,
-        label = "borderWidth"
-    )
-
-    Column {
-        Text(
-            text = label,
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onBackground,
-            modifier = Modifier.padding(bottom = 8.dp)
-        )
-
-        OutlinedTextField(
-            value = value,
-            onValueChange = onValueChange,
-            modifier = Modifier
-                .fillMaxWidth()
-                .onFocusChanged { onFocusChanged(it.isFocused) },
-            colors = OutlinedTextFieldDefaults.colors(
-                focusedBorderColor = MaterialTheme.colorScheme.primary,
-                unfocusedBorderColor = MaterialTheme.colorScheme.outline,
-                focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
-                unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
-                cursorColor = MaterialTheme.colorScheme.primary,
-                focusedTextColor = MaterialTheme.colorScheme.onBackground,
-                unfocusedTextColor = MaterialTheme.colorScheme.onBackground
-            ),
-            keyboardOptions = keyboardOptions,
-            shape = RoundedCornerShape(8.dp)
-        )
-    }
-}
-
-@Composable
-private fun PasswordField(
-    label: String,
-    value: String,
-    onValueChange: (String) -> Unit,
-    isPasswordVisible: Boolean,
-    onTogglePasswordVisibility: () -> Unit,
-    isFocused: Boolean,
-    onFocusChanged: (Boolean) -> Unit
-) {
-    val borderWidth by animateFloatAsState(
-        targetValue = if (isFocused) 2f else 1f,
-        label = "borderWidth"
-    )
-
-    Column {
-        Text(
-            text = label,
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onBackground,
-            modifier = Modifier.padding(bottom = 8.dp)
-        )
-
-        OutlinedTextField(
-            value = value,
-            onValueChange = onValueChange,
-            modifier = Modifier
-                .fillMaxWidth()
-                .onFocusChanged { onFocusChanged(it.isFocused) },
-            colors = OutlinedTextFieldDefaults.colors(
-                focusedBorderColor = MaterialTheme.colorScheme.primary,
-                unfocusedBorderColor = MaterialTheme.colorScheme.outline,
-                focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
-                unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
-                cursorColor = MaterialTheme.colorScheme.primary,
-                focusedTextColor = MaterialTheme.colorScheme.onBackground,
-                unfocusedTextColor = MaterialTheme.colorScheme.onBackground
-            ),
-            visualTransformation = if (isPasswordVisible) VisualTransformation.None else PasswordVisualTransformation(),
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-            trailingIcon = {
-                IconButton(onClick = onTogglePasswordVisibility) {
-                    Icon(
-                        imageVector = if (isPasswordVisible) Lucide.Eye else Lucide.EyeOff,
-                        contentDescription = "Toggle password visibility",
-                        tint = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f)
-                    )
-                }
-            },
-            shape = RoundedCornerShape(8.dp)
-        )
     }
 }
 

@@ -15,7 +15,7 @@ import androidx.compose.ui.unit.dp
 
 object ScreenModifiers {
     @Composable
-    fun defaultScreen(): Modifier {
+    fun Modifier.defaultScreen(): Modifier {
 
         return Modifier
             .fillMaxSize()
