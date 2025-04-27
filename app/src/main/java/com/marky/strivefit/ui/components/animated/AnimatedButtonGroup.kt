@@ -1,4 +1,4 @@
-package com.marky.strivefit.ui.components
+package com.marky.strivefit.ui.components.animated
 
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.layout.*
@@ -9,6 +9,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.tooling.preview.Preview
+import com.marky.strivefit.ui.components.AnimatedCustomButton
 import com.marky.strivefit.ui.theme.StriveFitTheme
 
 @Composable

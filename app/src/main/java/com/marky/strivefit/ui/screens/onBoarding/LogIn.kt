@@ -20,6 +20,7 @@ import androidx.compose.ui.unit.dp
 import com.marky.strivefit.ui.components.AnimatedCustomButton
 import com.marky.strivefit.ui.components.FormField
 import com.marky.strivefit.ui.components.GoBackButton
+import com.marky.strivefit.ui.components.GoogleButton
 import com.marky.strivefit.ui.theme.StriveFitTheme
 import com.marky.strivefit.ui.components.PasswordField
 import com.marky.strivefit.ui.components.SignupPrompt
@@ -115,7 +116,6 @@ fun Login(
                     onFocusChanged = { isPasswordFocused = it }
                 )
 
-                // Forgot password
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -135,7 +135,6 @@ fun Login(
 
                 Spacer(modifier = Modifier.height(24.dp))
 
-                // Login button
                 AnimatedCustomButton(
                     onClick = onLoginClick,
                     text = "Log In",
@@ -144,7 +143,6 @@ fun Login(
                     modifier = Modifier.fillMaxWidth()
                 )
 
-                // Divider with "or"
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier
@@ -168,29 +166,15 @@ fun Login(
                     )
                 }
 
-                // Google login button
-                Button(
+                GoogleButton(
                     onClick = onGoogleLoginClick,
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.surfaceVariant,
-                        contentColor = MaterialTheme.colorScheme.onBackground
-                    ),
-                    shape = MaterialTheme.shapes.medium,
-                    contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp),
+                    text = "Continue with Google",
+                    backgroundColor = MaterialTheme.colorScheme.surfaceVariant,
+                    textColor = MaterialTheme.colorScheme.onBackground,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(48.dp)
-                ) {
-                    GoogleIcon(
-                        modifier = Modifier.size(20.dp),
-                        color = MaterialTheme.colorScheme.onBackground
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(
-                        text = "Google",
-                        style = MaterialTheme.typography.bodyLarge
-                    )
-                }
+                        .padding(vertical = 16.dp)
+                )
 
                 Spacer(modifier = Modifier.height(16.dp))
 

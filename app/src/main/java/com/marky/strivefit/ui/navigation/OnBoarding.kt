@@ -57,15 +57,8 @@ fun NavGraphBuilder.onboardingNavGraph(navController: NavHostController) {
         Welcome(
             onSignUpClick = { navController.navigate("signup") },
             onLoginClick = { navController.navigate("login") },
-            onGuestClick = { navController.navigate("userSetup") }
+            onGuestClick = { navController.navigate("userSetup?origin=guest") }
         )
-    }
-
-    navigation(
-        startDestination = "setupEntry",
-        route = "userSetup"
-    ) {
-        userSetupNavGraph(navController)
     }
 
     composable(
@@ -116,4 +109,13 @@ fun NavGraphBuilder.onboardingNavGraph(navController: NavHostController) {
             onSignupClick = { navController.navigate("signup") }
         )
     }
+
+    //calls a dfferent nav graph for user setup
+    navigation(
+        startDestination = "SetupEntry?origin={origin}",
+        route = "userSetup"
+    ) {
+        userSetupNavGraph(navController)
+    }
+
 }

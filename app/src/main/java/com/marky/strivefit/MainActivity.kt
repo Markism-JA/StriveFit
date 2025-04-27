@@ -8,8 +8,9 @@ import androidx.compose.runtime.SideEffect
 import androidx.core.view.WindowCompat
 import com.marky.strivefit.ui.navigation.StriveFitApp
 import com.marky.strivefit.ui.theme.StriveFitTheme
+import dagger.hilt.android.AndroidEntryPoint
 
-
+@AndroidEntryPoint
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

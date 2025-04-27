@@ -8,6 +8,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.marky.strivefit.ui.components.*
+import com.marky.strivefit.ui.components.animated.AnimatedWelcomeButton
 import com.marky.strivefit.ui.modifiers.ScreenAlignments
 import com.marky.strivefit.ui.theme.StriveFitTheme
 import kotlinx.coroutines.delay

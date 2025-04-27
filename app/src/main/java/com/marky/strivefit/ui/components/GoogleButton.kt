@@ -11,10 +11,10 @@ import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import com.marky.strivefit.ui.animation.createButtonAnimations
+import com.marky.strivefit.ui.components.icon.GoogleIcon
 
 @Composable
-fun AnimatedCustomButton(
+fun GoogleButton(
     onClick: () -> Unit,
     text: String,
     backgroundColor: Color,
@@ -24,8 +24,26 @@ fun AnimatedCustomButton(
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
 
-    // Use the function to handle the animations inside the composable context
-    val (scale, elevationAnimation) = createButtonAnimations(isPressed)
+    val scale by animateFloatAsState(
+        targetValue = if (isPressed) 0.95f else 1f,
+        animationSpec = spring(
+            dampingRatio = Spring.DampingRatioMediumBouncy,
+            stiffness = Spring.StiffnessLow
+        ),
+        label = "buttonScale"
+    )
+
+    val elevationAnimation = remember { Animatable(0f) }
+
+    LaunchedEffect(isPressed) {
+        elevationAnimation.animateTo(
+            targetValue = if (isPressed) 4f else 0f,
+            animationSpec = spring(
+                dampingRatio = Spring.DampingRatioMediumBouncy,
+                stiffness = Spring.StiffnessLow
+            )
+        )
+    }
 
     Button(
         onClick = onClick,
@@ -44,6 +62,11 @@ fun AnimatedCustomButton(
             .height(48.dp)
             .defaultMinSize(minWidth = 200.dp)
     ) {
+        GoogleIcon(
+            modifier = Modifier.size(20.dp),
+            color = MaterialTheme.colorScheme.onBackground
+        )
+        Spacer(modifier = Modifier.width(8.dp))
         Text(
             text = text,
             style = MaterialTheme.typography.bodyLarge,
@@ -51,4 +74,3 @@ fun AnimatedCustomButton(
         )
     }
 }
-

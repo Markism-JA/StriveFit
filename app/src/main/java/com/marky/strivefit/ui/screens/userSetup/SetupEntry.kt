@@ -4,6 +4,8 @@ import androidx.compose.animation.*
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -14,14 +16,13 @@ import androidx.compose.ui.draw.scale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.marky.strivefit.ui.components.AnimatedCustomButton
 import kotlinx.coroutines.delay
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SetupEntry(isSignedIn: Boolean = false, onContinueClick: (String) -> Unit) {
+fun Entry(isSignedIn: Boolean = false, onContinueClick: (String) -> Unit) {
     val welcomeState = remember { MutableTransitionState(true) }
     val nameInputState = remember { MutableTransitionState(false) }
     val nameInput = remember { mutableStateOf(TextFieldValue()) }
@@ -130,74 +131,57 @@ fun NameInputSection(
 ) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(24.dp),
+        verticalArrangement = Arrangement.SpaceBetween,
         modifier = Modifier
-            .padding(24.dp)
-            .clip(MaterialTheme.shapes.large)
-            .background(MaterialTheme.colorScheme.background)
-            .padding(24.dp)
+            .fillMaxSize()
+            .imePadding()
+            .navigationBarsPadding()
+            .verticalScroll(rememberScrollState())
     ) {
-        Text(
-            text = "What should we call you?",
-            style = MaterialTheme.typography.headlineMedium,
-            color = MaterialTheme.colorScheme.onSurface,
-            fontWeight = FontWeight.Medium,
-            textAlign = TextAlign.Center
-        )
+        Spacer(modifier = Modifier.height(24.dp))
 
-        OutlinedTextField(
-            value = value,
-            onValueChange = onValueChange,
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(24.dp),
             modifier = Modifier
-                .fillMaxWidth()
-                .padding(top = 8.dp),
-            textStyle = MaterialTheme.typography.bodyLarge,
-            label = { Text("Nickname") },
-            singleLine = true,
-            colors = OutlinedTextFieldDefaults.colors(
-                focusedBorderColor = MaterialTheme.colorScheme.primary,
-                focusedLabelColor = MaterialTheme.colorScheme.primary
+                .padding(24.dp)
+                .clip(MaterialTheme.shapes.large)
+                .background(MaterialTheme.colorScheme.background)
+                .padding(24.dp)
+                .weight(1f, fill = false)
+        ) {
+            Text(
+                text = "What should we call you?",
+                style = MaterialTheme.typography.headlineMedium,
+                color = MaterialTheme.colorScheme.onSurface,
+                fontWeight = FontWeight.Medium,
+                textAlign = TextAlign.Center
             )
-        )
 
-        AnimatedCustomButton(
-            onClick = onContinueClick,
-            text = "Continue",
-            backgroundColor = MaterialTheme.colorScheme.primary,
-            textColor = MaterialTheme.colorScheme.onPrimary,
-            modifier = Modifier.fillMaxWidth()
-        )
-    }
-}
+            OutlinedTextField(
+                value = value,
+                onValueChange = onValueChange,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 8.dp),
+                textStyle = MaterialTheme.typography.bodyLarge,
+                label = { Text("Nickname") },
+                singleLine = true,
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = MaterialTheme.colorScheme.primary,
+                    focusedLabelColor = MaterialTheme.colorScheme.primary
+                )
+            )
 
-@Preview
-@Composable
-fun UserSetupSignedInPreview() {
-    MaterialTheme {
-        Surface(
-            modifier = Modifier.fillMaxSize(),
-            color = MaterialTheme.colorScheme.background
-        ) {
-            SetupEntry(isSignedIn = true) { nickname ->
-                // In a real app, this would navigate to the next screen with the nickname
-                println("Continue clicked with nickname: $nickname")
-            }
+            AnimatedCustomButton(
+                onClick = onContinueClick,
+                text = "Continue",
+                backgroundColor = MaterialTheme.colorScheme.primary,
+                textColor = MaterialTheme.colorScheme.onPrimary,
+                modifier = Modifier.fillMaxWidth()
+            )
         }
-    }
-}
 
-@Preview
-@Composable
-fun UserSetupGuestPreview() {
-    MaterialTheme {
-        Surface(
-            modifier = Modifier.fillMaxSize(),
-            color = MaterialTheme.colorScheme.background
-        ) {
-            SetupEntry(isSignedIn = false) { nickname ->
-                // In a real app, this would navigate to the next screen with the nickname
-                println("Continue clicked with nickname: $nickname")
-            }
-        }
+        Spacer(modifier = Modifier.height(24.dp))
     }
 }

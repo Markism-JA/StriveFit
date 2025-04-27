@@ -18,13 +18,13 @@ fun StriveFitApp(isDarkTheme: Boolean) {
     val navController = rememberNavController()
     val backgroundColor = if (isDarkTheme) DefaultDark.background else MaterialTheme.colorScheme.background
 
-    val isUserLoggedIn = false // placeholder
-    val isUserSetupComplete = false // placeholder
+    val isUserLoggedIn = false// placeholder
+    val isUserSetupComplete = false// placeholder
 
     val startDestination = when {
         !isUserLoggedIn -> "welcome"
         !isUserSetupComplete -> "userSetupHome"
-        else -> "mainHome"
+        else -> "mainApp"
     }
 
     Scaffold(
@@ -44,6 +44,7 @@ fun StriveFitApp(isDarkTheme: Boolean) {
             ) {
                 onboardingNavGraph(navController)
                 userSetupNavGraph(navController)
+                mainAppNavGraph(navController)
             }
         }
     }

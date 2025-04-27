@@ -11,7 +11,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
@@ -24,20 +23,22 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.material3.LinearProgressIndicator
 import com.marky.strivefit.ui.components.AnimatedCustomButton
-
 
 @Composable
 fun AgeInputScreen(
     onBackClick: () -> Unit = {},
     onContinueClick: () -> Unit = {}
 ) {
-    var ageText by remember { mutableStateOf("0") }
+    var ageText by remember { mutableStateOf("") }
+    var isAgeFocused by remember { mutableStateOf(false) }
 
     Box(
         modifier = Modifier
@@ -65,35 +66,30 @@ fun AgeInputScreen(
                     )
 
                     Text(
-                        text = "Create Account",
+                        text = "Your Age",
                         style = MaterialTheme.typography.headlineMedium,
                         color = MaterialTheme.colorScheme.onBackground,
                         modifier = Modifier.align(Alignment.Center)
                     )
                 }
 
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(10.dp))
 
-                Box(
+                LinearProgressIndicator(
+                    progress = { 0.125f },
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(8.dp)
-                        .background(Color.Gray.copy(alpha = 0.5f), RoundedCornerShape(4.dp))
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth(0.2f)
-                            .height(8.dp)
-                            .background(MaterialTheme.colorScheme.primary, RoundedCornerShape(4.dp))
-                    )
-                }
+                        .height(4.dp),
+                    color = MaterialTheme.colorScheme.primary,
+                    trackColor = MaterialTheme.colorScheme.onSurfaceVariant
+                )
 
                 Box(
                     modifier = Modifier.fillMaxWidth(),
                     contentAlignment = Alignment.CenterEnd
                 ) {
                     Text(
-                        text = "Step 1 of 5",
+                        text = "Step 1 of 8",
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onBackground,
                         modifier = Modifier.padding(top = 4.dp)
@@ -111,6 +107,14 @@ fun AgeInputScreen(
                             ageText = newValue
                         }
                     },
+                    placeholder = {
+                        Text(
+                            text = "0",
+                            style = MaterialTheme.typography.displayLarge,
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                    },
                     textStyle = MaterialTheme.typography.displayLarge.copy(
                         textAlign = TextAlign.Center,
                     ),
@@ -126,7 +130,11 @@ fun AgeInputScreen(
                         unfocusedIndicatorColor = Color.Transparent,
                         cursorColor = MaterialTheme.colorScheme.primary
                     ),
-                    modifier = Modifier.width(200.dp)
+                    modifier = Modifier
+                        .width(200.dp)
+                        .onFocusChanged { state ->
+                            isAgeFocused = state.isFocused
+                        }
                 )
 
                 Text(
@@ -136,7 +144,6 @@ fun AgeInputScreen(
                 )
             }
 
-            // Continue button
             AnimatedCustomButton(
                 onClick = onContinueClick,
                 text = "Continue",
