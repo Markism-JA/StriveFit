@@ -307,7 +307,7 @@ fun ChallengeCard(
             // Challenge Name
             Text(
                 text = challengeName,
-                style = MaterialTheme.typography.titleMedium, // Reduced size
+                style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
                 color = Color.White,
                 textAlign = TextAlign.Center,

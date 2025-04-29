@@ -213,7 +213,6 @@ fun TopBar(
     )
 }
 
-// Update MainAppScreen to include the top bar with no extra spacing
 @Composable
 fun MainAppScreen() {
     val navController = rememberNavController()
@@ -230,18 +229,6 @@ fun MainAppScreen() {
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
     val isHomeSelected = currentRoute == BottomBarScreen.Home.route
-
-    // Custom animation spec - choose one of these options
-    val animationSpec = androidx.compose.runtime.remember {
-        // Option 1: No animation - instant switching
-        tween<IntOffset>(durationMillis = 0)
-
-        // Option 2: ReVanced-style turning animation
-        // spring(
-        //     dampingRatio = 0.8f,
-        //     stiffness = Spring.StiffnessMediumLow
-        // )
-    }
 
     StriveFitTheme(themeManager = themeManager) {
         Scaffold(
@@ -270,26 +257,11 @@ fun MainAppScreen() {
                         navController = navController,
                         startDestination = BottomBarScreen.Home.route,
                         enterTransition = {
-                            // Instant transition with no animation
                             EnterTransition.None
                         },
                         exitTransition = {
-                            // Instant transition with no animation
                             ExitTransition.None
-                        },
-                        // If you want the ReVanced-style turning animation, use this instead:
-                        // enterTransition = {
-                        //     slideInHorizontally(
-                        //         initialOffsetX = { if (initialState.destination.route!! < targetState.destination.route!!) width else -width },
-                        //         animationSpec = animationSpec
-                        //     ) + fadeIn(animationSpec = tween(200))
-                        // },
-                        // exitTransition = {
-                        //     slideOutHorizontally(
-                        //         targetOffsetX = { if (initialState.destination.route!! < targetState.destination.route!!) -width else width },
-                        //         animationSpec = animationSpec
-                        //     ) + fadeOut(animationSpec = tween(200))
-                        // }
+                        }
                     ) {
                         composable(
                             route = BottomBarScreen.Home.route,
@@ -339,7 +311,7 @@ fun MainAppScreen() {
     }
 }
 
-// For the ReVanced-style turning animation, you would add this extension function
+// Used by ReVanced-style animation
 private fun <T> NavBackStackEntry.compareRoutes(other: NavBackStackEntry, routeOrder: List<T>): Int
         where T : Enum<T>, T : ScreenDestination {
     val thisRoute = this.destination.route ?: return 0
@@ -466,7 +438,7 @@ fun QuickActionFab(
                 }
         ) {
             Icon(
-                imageVector = Lucide.Dumbbell,  // Changed to Plus for better rotation visual
+                imageVector = Lucide.Dumbbell,
                 contentDescription = "Quick Actions",
                 tint = MaterialTheme.colorScheme.onPrimary,
                 modifier = Modifier

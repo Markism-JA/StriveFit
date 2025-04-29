@@ -95,7 +95,7 @@ fun WorkoutCard() {
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(24.dp),
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.primaryContainer // Deep purple background as shown in image
+            containerColor = MaterialTheme.colorScheme.primaryContainer
         )
     ) {
         Column(
@@ -133,7 +133,7 @@ fun WorkoutCard() {
                     onClick = { /* Start workout */ },
                     colors = ButtonDefaults.buttonColors(
                         containerColor = Color.Transparent,
-                        contentColor = MaterialTheme.colorScheme.secondaryContainer // Purple color for "Start" text
+                        contentColor = MaterialTheme.colorScheme.secondaryContainer
                     )
                 ) {
                     Text(
@@ -151,7 +151,7 @@ fun WorkoutCard() {
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(4.dp),
-                color = MaterialTheme.colorScheme.secondaryContainer, // Slightly lighter than background
+                color = MaterialTheme.colorScheme.secondaryContainer,
                 trackColor = Color(0xFF3A2A47)
             )
         }
@@ -187,7 +187,7 @@ fun ProgressStats() {
                     .fillMaxWidth()
                     .height(8.dp),
                 color = Color(0xFFBF5AF2),
-                trackColor = Color(0xFF2C2C2E) // Dark gray track
+                trackColor = Color(0xFF2C2C2E)
             )
 
             Spacer(modifier = Modifier.height(8.dp))
@@ -380,7 +380,7 @@ fun ExerciseItem(
             text = calories,
             style = MaterialTheme.typography.titleMedium,
             fontWeight = FontWeight.Bold,
-            color = Color(0xFFBF5AF2) // Purple color for calories
+            color = Color(0xFFBF5AF2)
         )
     }
 }
