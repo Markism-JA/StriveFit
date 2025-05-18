@@ -1,8 +1,6 @@
 package com.marky.strivefit.ui.theme
 
 import android.os.Build
-import androidx.compose.animation.animateColorAsState
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
@@ -18,9 +16,9 @@ import androidx.compose.material3.Typography
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.Color
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.marky.strivefit.ui.viewModel.ThemeManager
 
 var LocalThemeMode = staticCompositionLocalOf { ThemeMode.SYSTEM }
@@ -213,68 +211,18 @@ val StriveFitTypography = Typography(
     labelSmall = labelSmall
 )
 
-private val DarkColorScheme = darkColorScheme(
-    primary = DefaultDark.primary,
-    primaryContainer = DefaultDark.primaryContainer,
-    secondary = DefaultDark.secondary,
-    background = DefaultDark.background,
-    surface = DefaultDark.surface,
-    onPrimary = CommonColors.onPrimary,
-    surfaceVariant = DefaultDark.surfaceElevated,
-    outline = CommonColors.borderDark,
-    onBackground = CommonDark.onBackground,
-    onSurface = CommonDark.onBgMedium,
-    onSurfaceVariant = CommonDark.onBgDisabled,
-    secondaryContainer = CommonColors.secondaryContainer,
-    onSecondaryContainer = CommonColors.onSecondaryContainer
-
-)
-
-
-
-private val LightColorScheme = lightColorScheme(
-    primary = DefaultLight.primary,
-    primaryContainer = DefaultLight.primaryContainer,
-    secondary = DefaultLight.secondary,
-    background = DefaultLight.background,
-    surface = DefaultLight.surface,
-    onPrimary = CommonColors.onPrimary,
-    surfaceVariant = DefaultLight.surfaceElevated,
-    outline = CommonColors.borderLight,
-    onBackground = CommonLight.onBackground,
-    onSurface = CommonLight.onBgMedium,
-    onSurfaceVariant = CommonLight.onBgDisabled,
-    secondaryContainer = CommonColors.secondaryContainer,
-    onSecondaryContainer = CommonColors.onSecondaryContainer
-
-)
-
 
 @Composable
 fun StriveFitTheme(
-    themeManager: ThemeManager = remember { ThemeManager() },
+    themeManagerViewModel: ThemeManager = viewModel(),
     dynamicColor: Boolean = false,
     content: @Composable () -> Unit
 ) {
-    val themeMode by themeManager.themeMode.collectAsState()
-    val colorOption by themeManager.colorOption.collectAsState()
+    val themeMode by themeManagerViewModel.themeMode.collectAsState()
+    val colorOption by themeManagerViewModel.colorOption.collectAsState()
 
     val colorScheme = getColorScheme(themeMode, colorOption, dynamicColor)
-    //Animate color transitions
-    val animatedColorScheme = colorScheme.copy(
-        primary = animateColorAsState(
-            targetValue = colorScheme.primary,
-            animationSpec = tween(300)
-        ).value,
-        surface = animateColorAsState(
-            targetValue = colorScheme.surface,
-            animationSpec = tween(300)
-        ).value,
-        secondary = animateColorAsState(
-            targetValue = colorScheme.secondary,
-            animationSpec = tween(300)
-        ).value
-    )
+
     CompositionLocalProvider(
        LocalThemeMode provides themeMode,
         LocalThemeColorOption provides colorOption
