@@ -58,7 +58,6 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavDestination.Companion.hierarchy
@@ -72,7 +71,7 @@ import com.composables.icons.lucide.*
 import com.marky.strivefit.ui.theme.CommonColors
 import com.marky.strivefit.ui.theme.LocalThemeMode
 import com.marky.strivefit.ui.theme.StriveFitTheme
-import com.marky.strivefit.ui.theme.ThemeManager
+import com.marky.strivefit.ui.viewModel.ThemeManager
 import com.marky.strivefit.ui.theme.ThemeMode
 import com.marky.strivefit.ui.theme.getThemeIconColor
 

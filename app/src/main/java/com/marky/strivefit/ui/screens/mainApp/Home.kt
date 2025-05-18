@@ -26,7 +26,6 @@ import androidx.compose.ui.unit.dp
 import com.composables.icons.lucide.Flame
 import com.composables.icons.lucide.PersonStanding
 import com.composables.icons.lucide.Footprints
-import com.marky.strivefit.ui.theme.CommonColors
 import com.marky.strivefit.ui.theme.LocalThemeMode
 import com.marky.strivefit.ui.theme.ThemeMode
 

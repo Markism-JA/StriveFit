@@ -4,7 +4,6 @@ import android.os.Build
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.isSystemInDarkTheme
-import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.dynamicDarkColorScheme
@@ -17,35 +16,16 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 import androidx.compose.material3.Typography
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.staticCompositionLocalOf
-import com.marky.strivefit.ui.theme.CommonColors
 import androidx.compose.ui.graphics.Color
-enum class ThemeMode {
-    LIGHT, DARK, SYSTEM
-}
+import com.marky.strivefit.ui.viewModel.ThemeManager
 
 var LocalThemeMode = staticCompositionLocalOf { ThemeMode.SYSTEM }
 
-enum class ThemeColorOption {
-    DEFAULT, ENERGETIC
-}
-
 val LocalThemeColorOption = staticCompositionLocalOf{ ThemeColorOption.DEFAULT }
-
-class ThemeManager {
-    var themeMode = mutableStateOf(ThemeMode.SYSTEM)
-    var colorOption = mutableStateOf(ThemeColorOption.DEFAULT)
-    fun setThemeMode(mode: ThemeMode) {
-        themeMode.value = mode
-    }
-
-    fun setColorOption(option: ThemeColorOption) {
-        colorOption.value = option
-    }
-}
 
 @Composable
 fun ThemeMode.isDarkTheme(): Boolean {
@@ -276,11 +256,10 @@ fun StriveFitTheme(
     dynamicColor: Boolean = false,
     content: @Composable () -> Unit
 ) {
-    val themeMode by remember { themeManager.themeMode }
-    val colorOption by remember { themeManager.colorOption }
+    val themeMode by themeManager.themeMode.collectAsState()
+    val colorOption by themeManager.colorOption.collectAsState()
 
     val colorScheme = getColorScheme(themeMode, colorOption, dynamicColor)
-
     //Animate color transitions
     val animatedColorScheme = colorScheme.copy(
         primary = animateColorAsState(
