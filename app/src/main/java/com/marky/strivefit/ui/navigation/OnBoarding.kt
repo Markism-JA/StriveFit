@@ -11,6 +11,7 @@ import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.composable
 import androidx.compose.ui.unit.IntOffset
+import androidx.navigation.NavGraph
 import androidx.navigation.navigation
 import com.marky.strivefit.ui.screens.onBoarding.Welcome
 import com.marky.strivefit.ui.screens.onBoarding.Login
@@ -80,7 +81,7 @@ fun NavGraphBuilder.onboardingNavGraph(navController: NavHostController) {
     ) {
         SignUp(
             onBackClick = { navController.popBackStack() },
-            onSignUpClick = { /* Handle sign up logic */ },
+            onSignUpClick = { /* testing try  */ },
             onGoogleSignUpClick = { /* Google sign up */ }
         )
     }
@@ -110,7 +111,7 @@ fun NavGraphBuilder.onboardingNavGraph(navController: NavHostController) {
         )
     }
 
-    //calls a dfferent nav graph for user setup
+    //calls a different nav graph for user setup
     navigation(
         startDestination = "SetupEntry?origin={origin}",
         route = "userSetup"

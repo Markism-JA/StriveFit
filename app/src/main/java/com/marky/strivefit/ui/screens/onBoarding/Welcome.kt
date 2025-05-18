@@ -160,7 +160,7 @@ private fun PortraitWelcomeLayout(
     onGuestClick: () -> Unit,
     onLoginClick: () -> Unit
 ) {
-    // Adjust logo size based on screen width
+        // Adjust logo size based on screen width
     val logoSize = when (widthSizeClass) {
         WindowWidthSizeClass.Expanded -> 240.dp
         WindowWidthSizeClass.Medium -> 200.dp
