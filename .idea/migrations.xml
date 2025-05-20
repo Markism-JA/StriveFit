@@ -3,7 +3,7 @@
   <component name="ProjectMigrations">
     <option name="MigrateToGradleLocalJavaHome">
       <set>
-        <option value="$PROJECT_DIR$" />
+        <option value="/mnt/marky-ssd/Documents/Coding/AndroidStudioProjects/StriveFit" />
       </set>
     </option>
   </component>

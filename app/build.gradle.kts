@@ -2,6 +2,8 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
+    alias(libs.plugins.hilt)
+    alias(libs.plugins.ksp)
 }
 
 android {
@@ -27,13 +29,17 @@ android {
             )
         }
     }
+
     compileOptions {
+        // Removed duplicate configuration and kept Java 11
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
     }
+
     kotlinOptions {
         jvmTarget = "11"
     }
+
     buildFeatures {
         compose = true
     }
@@ -41,8 +47,9 @@ android {
 
 dependencies {
     // Hilt
-    implementation(libs.hilt.android)
-    implementation(libs.androidx.hilt.lifecycle.viewmodel)
+    implementation(libs.hilt.android.v2562)
+    ksp(libs.hilt.android.compiler)
+    implementation(libs.androidx.hilt.navigation.compose)
 
     // AndroidX & Kotlin
     implementation(libs.androidx.core.ktx)
@@ -55,14 +62,21 @@ dependencies {
     implementation(libs.androidx.ui.graphics)
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
+    implementation(libs.androidx.navigation.compose)
 
     // Security
-    implementation(libs.androidx.security.crypto) // ✅ KEEP ONLY THIS
+    implementation(libs.androidx.security.crypto)
 
-    // Room (not sure if you're using full Room or just annotations)
+    // Room
     implementation(libs.androidx.room.common)
     implementation(libs.androidx.annotation)
-    implementation(libs.support.annotations)
+
+    // Font
+    implementation(libs.androidx.ui.text.google.fonts)
+    implementation(libs.androidx.core.splashscreen)
+
+    // Icon
+    implementation(libs.icons.lucide)
 
     // Testing
     testImplementation(libs.junit)
@@ -74,13 +88,4 @@ dependencies {
     // Debug tools
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
-
-    //Font
-    implementation(libs.androidx.ui.text.google.fonts)
-
-    implementation(libs.androidx.core.splashscreen)
-
-    //Icon
-    implementation(libs.icons.lucide)
-    implementation(libs.androidx.navigation.compose)
 }

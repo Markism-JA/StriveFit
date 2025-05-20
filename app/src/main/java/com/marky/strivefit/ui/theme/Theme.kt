@@ -1,7 +1,11 @@
 package com.marky.strivefit.ui.theme
 
+import android.app.Activity
+import androidx.hilt.navigation.compose.hiltViewModel
 import android.os.Build
+import androidx.activity.compose.LocalActivity
 import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.dynamicDarkColorScheme
@@ -14,11 +18,14 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 import androidx.compose.material3.Typography
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.Color
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.compose.ui.platform.LocalView
+import androidx.core.view.WindowCompat
+import androidx.core.view.WindowInsetsControllerCompat
 import com.marky.strivefit.ui.viewModel.ThemeManager
 
 var LocalThemeMode = staticCompositionLocalOf { ThemeMode.SYSTEM }
@@ -40,7 +47,7 @@ fun getColorScheme(
     themeMode: ThemeMode,
     colorOption: ThemeColorOption,
     dynamicColor: Boolean = false
-) : androidx.compose.material3.ColorScheme {
+) : ColorScheme {
     val isDarkTheme = themeMode.isDarkTheme()
 
     if (dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
@@ -214,24 +221,42 @@ val StriveFitTypography = Typography(
 
 @Composable
 fun StriveFitTheme(
-    themeManagerViewModel: ThemeManager = viewModel(),
     dynamicColor: Boolean = false,
     content: @Composable () -> Unit
 ) {
-    val themeMode by themeManagerViewModel.themeMode.collectAsState()
-    val colorOption by themeManagerViewModel.colorOption.collectAsState()
-
+    val themeManager: ThemeManager = hiltViewModel()
+    val themeMode by themeManager.themeMode.collectAsState()
+    val colorOption by themeManager.colorOption.collectAsState()
     val colorScheme = getColorScheme(themeMode, colorOption, dynamicColor)
 
+    ApplySystemUi(themeMode)
+
     CompositionLocalProvider(
-       LocalThemeMode provides themeMode,
+        LocalThemeMode provides themeMode,
         LocalThemeColorOption provides colorOption
-    ){
+    ) {
         MaterialTheme(
             colorScheme = colorScheme,
             typography = StriveFitTypography,
             content = content
         )
+    }
+}
+
+@Composable
+fun ApplySystemUi(themeMode: ThemeMode) {
+    val view = LocalView.current
+    val window = (LocalActivity.current as Activity).window
+
+    val isDarkIcons = when (themeMode){
+        ThemeMode.LIGHT -> true
+        ThemeMode.DARK -> false
+        ThemeMode.SYSTEM -> !isSystemInDarkTheme()
+    }
+
+    SideEffect {
+        WindowCompat.setDecorFitsSystemWindows(window, false)
+        WindowInsetsControllerCompat(window, view).isAppearanceLightStatusBars = isDarkIcons
     }
 }
 
