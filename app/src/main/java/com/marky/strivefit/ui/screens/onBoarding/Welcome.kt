@@ -1,11 +1,9 @@
 package com.marky.strivefit.ui.screens.onBoarding
 
-import FoldPosition
 import android.content.res.Configuration
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -13,6 +11,8 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.windowsizeclass.WindowHeightSizeClass
+import androidx.compose.material3.windowsizeclass.WindowSizeClass
+import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -28,17 +28,13 @@ import com.marky.strivefit.ui.components.AnimatedLogo
 import com.marky.strivefit.ui.components.AnimatedTextLogo
 import com.marky.strivefit.ui.components.LoginPrompt
 import com.marky.strivefit.ui.components.animated.AnimatedWelcomeButton
-import androidx.compose.material3.windowsizeclass.WindowSizeClass
-import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
-import androidx.compose.ui.unit.Dp
-import androidx.window.layout.DisplayFeature
-import androidx.window.layout.FoldingFeature
+import com.marky.strivefit.ui.utilities.calculateWindowHeightSizeClass
+import com.marky.strivefit.ui.utilities.calculateWindowWidthSizeClass
 import kotlinx.coroutines.delay
 
 @Composable
 fun Welcome(
     windowSizeClass: WindowSizeClass? = null,
-    displayFeature: List<DisplayFeature>? = null,
     onSignUpClick: () -> Unit = {},
     onGuestClick: () -> Unit = {},
     onLoginClick: () -> Unit = {}
@@ -46,30 +42,21 @@ fun Welcome(
     val configuration = LocalConfiguration.current
     val orientation = configuration.orientation
 
-    val screeenWidth = configuration.screenWidthDp.dp
-    val screeenHeight = configuration.screenHeightDp.dp
+    val screenWidth = configuration.screenWidthDp.dp
+    val screenHeight = configuration.screenHeightDp.dp
 
-    val widthSizeClass by remember(windowSizeClass, screeenWidth) {
-        mutableStateOf(windowSizeClass?.widthSizeClass ?: calculateWindowWidthSizeClass(screeenWidth))
+    val widthSizeClass by remember(windowSizeClass, screenWidth) {
+        mutableStateOf(windowSizeClass?.widthSizeClass ?: calculateWindowWidthSizeClass(screenWidth))
     }
 
-    val heightSizeClass by remember(windowSizeClass, screeenHeight) {
-        mutableStateOf(windowSizeClass?.heightSizeClass ?: calculateWindowHeightSizeClass(screeenHeight))
-    }
-
-    val foldingFeature = displayFeature?.filterIsInstance<FoldingFeature>()?.firstOrNull()
-    val isFolded = foldingFeature?.state == FoldingFeature.State.HALF_OPENED
-    val foldPosition = when {
-        foldingFeature == null -> FoldPosition.NONE
-        foldingFeature.orientation == FoldingFeature.Orientation.HORIZONTAL -> FoldPosition.HORIZONTAL
-        else -> FoldPosition.VERTICAL
+    val heightSizeClass by remember(windowSizeClass, screenHeight) {
+        mutableStateOf(windowSizeClass?.heightSizeClass ?: calculateWindowHeightSizeClass(screenHeight))
     }
 
     var animationPlayed by remember { mutableStateOf(false) }
-    val animationSequence = remember { mutableStateListOf<Boolean>().apply {
-        repeat(4) {
-                add(false)
-            }
+    val animationSequence = remember {
+        mutableStateListOf<Boolean>().apply {
+            repeat(4) { add(false) }
         }
     }
 
@@ -84,21 +71,21 @@ fun Welcome(
         animationPlayed = true
     }
 
-    val aspectRatio = screeenWidth / screeenHeight
+    val aspectRatio = screenWidth / screenHeight
 
-    when {
-        isFolded && foldPosition == FoldPosition.HORIZONTAL ->
-            landscapeWelcomeLayout(
+    if (aspectRatio > 1.2f && widthSizeClass != WindowWidthSizeClass.Compact) {
+        val isExplicitlyLandscape = orientation == Configuration.ORIENTATION_LANDSCAPE
+        if (isExplicitlyLandscape || aspectRatio > 1.5f) {
+            LandscapeWelcomeLayout(
                 animationPlayed = animationPlayed,
                 animationSequence = animationSequence,
                 widthSizeClass = widthSizeClass,
                 heightSizeClass = heightSizeClass,
                 onSignUpClick = onSignUpClick,
                 onGuestClick = onGuestClick,
-                onLoginClick = onLoginClick,
+                onLoginClick = onLoginClick
             )
-
-        isFolded && foldPosition == FoldPosition.VERTICAL -> {
+        } else {
             PortraitWelcomeLayout(
                 animationPlayed = animationPlayed,
                 animationSequence = animationSequence,
@@ -106,46 +93,19 @@ fun Welcome(
                 heightSizeClass = heightSizeClass,
                 onSignUpClick = onSignUpClick,
                 onGuestClick = onGuestClick,
-                onLoginClick = onLoginClick,
+                onLoginClick = onLoginClick
             )
         }
-
-        aspectRatio > 1.2f && widthSizeClass != WindowWidthSizeClass.Compact -> {
-            val isExplicitlyLandscape = orientation == Configuration.ORIENTATION_LANDSCAPE
-            if (isExplicitlyLandscape || aspectRatio > 1.5f) {
-                landscapeWelcomeLayout(
-                    animationPlayed = animationPlayed,
-                    animationSequence = animationSequence,
-                    widthSizeClass = widthSizeClass,
-                    heightSizeClass = heightSizeClass,
-                    onSignUpClick = onSignUpClick,
-                    onGuestClick = onGuestClick,
-                    onLoginClick = onLoginClick
-                )
-            } else {
-                PortraitWelcomeLayout(
-                    animationPlayed = animationPlayed,
-                    animationSequence = animationSequence,
-                    widthSizeClass = widthSizeClass,
-                    heightSizeClass = heightSizeClass,
-                    onSignUpClick = onSignUpClick,
-                    onGuestClick = onGuestClick,
-                    onLoginClick = onLoginClick,
-                )
-            }
-        }
-
-        else -> {
-            PortraitWelcomeLayout(
-                animationPlayed = animationPlayed,
-                animationSequence = animationSequence,
-                widthSizeClass = widthSizeClass,
-                heightSizeClass = heightSizeClass,
-                onSignUpClick = onSignUpClick,
-                onGuestClick = onGuestClick,
-                onLoginClick = onLoginClick,
-            )
-        }
+    } else {
+        PortraitWelcomeLayout(
+            animationPlayed = animationPlayed,
+            animationSequence = animationSequence,
+            widthSizeClass = widthSizeClass,
+            heightSizeClass = heightSizeClass,
+            onSignUpClick = onSignUpClick,
+            onGuestClick = onGuestClick,
+            onLoginClick = onLoginClick
+        )
     }
 }
 
@@ -155,12 +115,11 @@ private fun PortraitWelcomeLayout(
     animationSequence: List<Boolean>,
     widthSizeClass: WindowWidthSizeClass,
     heightSizeClass: WindowHeightSizeClass,
-    foldPosition: FoldPosition = FoldPosition.NONE,
     onSignUpClick: () -> Unit,
     onGuestClick: () -> Unit,
     onLoginClick: () -> Unit
 ) {
-        // Adjust logo size based on screen width
+    // Adjust logo size based on screen width
     val logoSize = when (widthSizeClass) {
         WindowWidthSizeClass.Expanded -> 240.dp
         WindowWidthSizeClass.Medium -> 200.dp
@@ -187,19 +146,11 @@ private fun PortraitWelcomeLayout(
         else -> 12.dp
     }
 
-    // Apply special padding for foldable devices in tabletop mode (horizontal fold)
-    val columnPadding = if (foldPosition == FoldPosition.HORIZONTAL) {
-        // Add extra top/bottom padding to accommodate the fold
-        PaddingValues(horizontal = 16.dp, vertical = 24.dp)
-    } else {
-        PaddingValues(16.dp)
-    }
-
     Column(
         modifier = Modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
-            .padding(columnPadding),
+            .padding(16.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = if (heightSizeClass == WindowHeightSizeClass.Compact) {
             Arrangement.SpaceEvenly // More compact spacing for smaller heights
@@ -236,12 +187,11 @@ private fun PortraitWelcomeLayout(
 }
 
 @Composable
-private fun landscapeWelcomeLayout(
+private fun LandscapeWelcomeLayout(
     animationPlayed: Boolean,
     animationSequence: List<Boolean>,
     widthSizeClass: WindowWidthSizeClass,
     heightSizeClass: WindowHeightSizeClass,
-    foldPosition: FoldPosition = FoldPosition.NONE,
     onSignUpClick: () -> Unit,
     onGuestClick: () -> Unit,
     onLoginClick: () -> Unit
@@ -260,19 +210,11 @@ private fun landscapeWelcomeLayout(
         else -> 150.dp
     }
 
-    // Apply special padding for foldable devices in book mode (vertical fold)
-    val rowPadding = if (foldPosition == FoldPosition.VERTICAL) {
-        // Add extra padding to accommodate the fold
-        PaddingValues(horizontal = 24.dp, vertical = 16.dp)
-    } else {
-        PaddingValues(16.dp)
-    }
-
     Row(
         modifier = Modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
-            .padding(rowPadding),
+            .padding(16.dp),
         horizontalArrangement = Arrangement.SpaceEvenly,
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -301,7 +243,6 @@ private fun landscapeWelcomeLayout(
             verticalArrangement = Arrangement.Center,
             modifier = Modifier.weight(1f)
         ) {
-
             AnimatedWelcomeButton(
                 onSignUpClick = onSignUpClick,
                 onGuestClick = onGuestClick,
@@ -315,19 +256,5 @@ private fun landscapeWelcomeLayout(
                 modifier = Modifier.padding(top = 16.dp)
             )
         }
-    }
-}
-
-fun calculateWindowWidthSizeClass(width: Dp): WindowWidthSizeClass {
-    return when {
-        width < 600.dp -> WindowWidthSizeClass.Compact
-        width < 840.dp -> WindowWidthSizeClass.Medium
-        else -> WindowWidthSizeClass.Expanded
-    }
-}
-
-fun calculateWindowHeightSizeClass(height: Dp): WindowHeightSizeClass {
-    return when {
-        else -> WindowHeightSizeClass.Expanded
     }
 }

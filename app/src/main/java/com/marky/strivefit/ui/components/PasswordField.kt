@@ -32,7 +32,7 @@ fun PasswordField(
     isPasswordVisible: Boolean,
     onTogglePasswordVisibility: () -> Unit,
     isFocused: Boolean,
-    onFocusChanged: (Boolean) -> Unit
+    onFocusChanged: (Boolean) -> Unit,
 ) {
     val borderWidth by animateFloatAsState(
         targetValue = if (isFocused) 2f else 1f,
