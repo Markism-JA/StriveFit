@@ -36,8 +36,8 @@ import com.marky.strivefit.ui.utilities.calculateWindowHeightSizeClass
 import com.marky.strivefit.ui.utilities.calculateWindowWidthSizeClass
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import privacyPolicyText // Assuming this is defined elsewhere
-import termsOfServiceText // Assuming this is defined elsewhere
+import privacyPolicyText
+import termsOfServiceText
 
 @Composable
 fun SignUp(
