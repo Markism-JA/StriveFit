@@ -1,6 +1,5 @@
 package com.marky.strivefit.ui.screens.mainApp
 
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -17,11 +16,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.composables.icons.lucide.*
-import com.marky.strivefit.ui.theme.LocalThemeMode
-import com.marky.strivefit.ui.theme.ThemeMode
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.lazy.items
-import androidx.compose.ui.text.style.TextOverflow
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

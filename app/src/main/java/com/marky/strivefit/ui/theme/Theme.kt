@@ -1,8 +1,9 @@
 package com.marky.strivefit.ui.theme
 
+import android.app.Activity
+import androidx.hilt.navigation.compose.hiltViewModel
 import android.os.Build
-import androidx.compose.animation.animateColorAsState
-import androidx.compose.animation.core.tween
+import androidx.activity.compose.LocalActivity
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.MaterialTheme
@@ -17,35 +18,19 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 import androidx.compose.material3.Typography
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.SideEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.staticCompositionLocalOf
-import com.marky.strivefit.ui.theme.CommonColors
 import androidx.compose.ui.graphics.Color
-enum class ThemeMode {
-    LIGHT, DARK, SYSTEM
-}
+import androidx.compose.ui.platform.LocalView
+import androidx.core.view.WindowCompat
+import androidx.core.view.WindowInsetsControllerCompat
+import com.marky.strivefit.ui.viewModel.ThemeManager
 
 var LocalThemeMode = staticCompositionLocalOf { ThemeMode.SYSTEM }
 
-enum class ThemeColorOption {
-    DEFAULT, ENERGETIC
-}
-
 val LocalThemeColorOption = staticCompositionLocalOf{ ThemeColorOption.DEFAULT }
-
-class ThemeManager {
-    var themeMode = mutableStateOf(ThemeMode.SYSTEM)
-    var colorOption = mutableStateOf(ThemeColorOption.DEFAULT)
-    fun setThemeMode(mode: ThemeMode) {
-        themeMode.value = mode
-    }
-
-    fun setColorOption(option: ThemeColorOption) {
-        colorOption.value = option
-    }
-}
 
 @Composable
 fun ThemeMode.isDarkTheme(): Boolean {
@@ -62,7 +47,7 @@ fun getColorScheme(
     themeMode: ThemeMode,
     colorOption: ThemeColorOption,
     dynamicColor: Boolean = false
-) : androidx.compose.material3.ColorScheme {
+) : ColorScheme {
     val isDarkTheme = themeMode.isDarkTheme()
 
     if (dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
@@ -233,78 +218,45 @@ val StriveFitTypography = Typography(
     labelSmall = labelSmall
 )
 
-private val DarkColorScheme = darkColorScheme(
-    primary = DefaultDark.primary,
-    primaryContainer = DefaultDark.primaryContainer,
-    secondary = DefaultDark.secondary,
-    background = DefaultDark.background,
-    surface = DefaultDark.surface,
-    onPrimary = CommonColors.onPrimary,
-    surfaceVariant = DefaultDark.surfaceElevated,
-    outline = CommonColors.borderDark,
-    onBackground = CommonDark.onBackground,
-    onSurface = CommonDark.onBgMedium,
-    onSurfaceVariant = CommonDark.onBgDisabled,
-    secondaryContainer = CommonColors.secondaryContainer,
-    onSecondaryContainer = CommonColors.onSecondaryContainer
-
-)
-
-
-
-private val LightColorScheme = lightColorScheme(
-    primary = DefaultLight.primary,
-    primaryContainer = DefaultLight.primaryContainer,
-    secondary = DefaultLight.secondary,
-    background = DefaultLight.background,
-    surface = DefaultLight.surface,
-    onPrimary = CommonColors.onPrimary,
-    surfaceVariant = DefaultLight.surfaceElevated,
-    outline = CommonColors.borderLight,
-    onBackground = CommonLight.onBackground,
-    onSurface = CommonLight.onBgMedium,
-    onSurfaceVariant = CommonLight.onBgDisabled,
-    secondaryContainer = CommonColors.secondaryContainer,
-    onSecondaryContainer = CommonColors.onSecondaryContainer
-
-)
-
 
 @Composable
 fun StriveFitTheme(
-    themeManager: ThemeManager = remember { ThemeManager() },
     dynamicColor: Boolean = false,
     content: @Composable () -> Unit
 ) {
-    val themeMode by remember { themeManager.themeMode }
-    val colorOption by remember { themeManager.colorOption }
-
+    val themeManager: ThemeManager = hiltViewModel()
+    val themeMode by themeManager.themeMode.collectAsState()
+    val colorOption by themeManager.colorOption.collectAsState()
     val colorScheme = getColorScheme(themeMode, colorOption, dynamicColor)
 
-    //Animate color transitions
-    val animatedColorScheme = colorScheme.copy(
-        primary = animateColorAsState(
-            targetValue = colorScheme.primary,
-            animationSpec = tween(300)
-        ).value,
-        surface = animateColorAsState(
-            targetValue = colorScheme.surface,
-            animationSpec = tween(300)
-        ).value,
-        secondary = animateColorAsState(
-            targetValue = colorScheme.secondary,
-            animationSpec = tween(300)
-        ).value
-    )
+    ApplySystemUi(themeMode)
+
     CompositionLocalProvider(
-       LocalThemeMode provides themeMode,
+        LocalThemeMode provides themeMode,
         LocalThemeColorOption provides colorOption
-    ){
+    ) {
         MaterialTheme(
             colorScheme = colorScheme,
             typography = StriveFitTypography,
             content = content
         )
+    }
+}
+
+@Composable
+fun ApplySystemUi(themeMode: ThemeMode) {
+    val view = LocalView.current
+    val window = (LocalActivity.current as Activity).window
+
+    val isDarkIcons = when (themeMode){
+        ThemeMode.LIGHT -> true
+        ThemeMode.DARK -> false
+        ThemeMode.SYSTEM -> !isSystemInDarkTheme()
+    }
+
+    SideEffect {
+        WindowCompat.setDecorFitsSystemWindows(window, false)
+        WindowInsetsControllerCompat(window, view).isAppearanceLightStatusBars = isDarkIcons
     }
 }
 
