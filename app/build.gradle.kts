@@ -29,17 +29,13 @@ android {
             )
         }
     }
-
     compileOptions {
-        // Removed duplicate configuration and kept Java 11
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
     }
-
     kotlinOptions {
         jvmTarget = "11"
     }
-
     buildFeatures {
         compose = true
     }
@@ -77,7 +73,6 @@ dependencies {
 
     // Icon
     implementation(libs.icons.lucide)
-
     // Testing
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
@@ -88,4 +83,8 @@ dependencies {
     // Debug tools
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
+
+    // Window Imports
+    implementation(libs.androidx.material3.window.size.class1)
+    implementation(libs.androidx.window)
 }
