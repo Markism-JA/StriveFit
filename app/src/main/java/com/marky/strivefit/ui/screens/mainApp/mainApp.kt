@@ -69,7 +69,7 @@ fun MainAppScreen(
             ) {
                 Scaffold(
                     topBar = {
-                        TopBar(
+                        TopBarContainer(
                             title = currentScreenTitle,
                             onProfileClick = { /* Handle profile click */ },
                             onSettingsClick = { /* Handle settings click */ },
