@@ -376,8 +376,6 @@ private fun LoginLandscapeLayout(
             modifier = Modifier.fillMaxWidth()
         )
 
-        OrLogInWithDivider(modifier = Modifier.padding(vertical = verticalSpacing))
-
         GoogleButton(
             onClick = onGoogleLoginClick,
             text = "Continue with Google",
@@ -423,7 +421,7 @@ private fun OrLogInWithDivider(modifier: Modifier = Modifier) {
         )
         HorizontalDivider(
             modifier = Modifier.weight(1f),
-            thickness = 1.dp, // Common thickness
+            thickness = 1.dp,
             color = MaterialTheme.colorScheme.outline
         )
     }

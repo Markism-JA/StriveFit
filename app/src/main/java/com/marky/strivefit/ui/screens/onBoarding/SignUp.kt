@@ -26,7 +26,6 @@ import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.min
 import com.marky.strivefit.ui.components.AnimatedCustomButton
 import com.marky.strivefit.ui.components.FormField
 import com.marky.strivefit.ui.components.GoBackButton
@@ -36,8 +35,6 @@ import com.marky.strivefit.ui.utilities.calculateWindowHeightSizeClass
 import com.marky.strivefit.ui.utilities.calculateWindowWidthSizeClass
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import privacyPolicyText
-import termsOfServiceText
 
 @Composable
 fun SignUp(
@@ -124,6 +121,7 @@ fun SignUp(
                         onPasswordChange = { password = it },
                         isPasswordVisible = isPasswordVisible,
                         onTogglePasswordVisibility = { isPasswordVisible = !isPasswordVisible },
+                        onToggleConfirmPasswordVisibility = { isConfirmPasswordVisible = !isConfirmPasswordVisible },
                         isPasswordFocused = isPasswordFocused,
                         onPasswordFocusChanged = { isPasswordFocused = it },
                         confirmPassword = confirmPassword,
@@ -352,6 +350,7 @@ private fun SignUpLandscapeLayout(
     onPasswordChange: (String) -> Unit,
     isPasswordVisible: Boolean,
     onTogglePasswordVisibility: () -> Unit,
+    onToggleConfirmPasswordVisibility: () -> Unit,
     isPasswordFocused: Boolean,
     onPasswordFocusChanged: (Boolean) -> Unit,
     confirmPassword: String,
@@ -448,7 +447,7 @@ private fun SignUpLandscapeLayout(
                     isPasswordVisible = isConfirmPasswordVisible,
                     isFocused = isConfirmPasswordFocused,
                     onFocusChanged = onConfirmPasswordFocusChanged,
-                    onTogglePasswordVisibility = onTogglePasswordVisibility
+                    onTogglePasswordVisibility = onToggleConfirmPasswordVisibility
                 )
             }
         }
@@ -524,9 +523,6 @@ private fun TermsAndConditionsCheckbox(
             modifier = Modifier.size(24.dp)
         )
         Spacer(modifier = Modifier.width(8.dp))
-        // Using a Text with AnnotatedString for better semantics and accessibility if needed,
-        // but separate Text components are fine for click handling.
-        // For simplicity, keeping separate Text components as in original.
         Text(
             text = "I agree to the ",
             style = MaterialTheme.typography.bodyMedium,
@@ -555,70 +551,3 @@ private fun TermsAndConditionsCheckbox(
 }
 
 
-@Composable
-fun LegalContentDialog(
-    type: LegalContentType,
-    onDismiss: () -> Unit,
-    isLandscape: Boolean
-) {
-    val title = when (type) {
-        LegalContentType.TERMS_OF_SERVICE -> "Terms of Service"
-        LegalContentType.PRIVACY_POLICY -> "Privacy Policy"
-    }
-    val content = when (type) {
-        LegalContentType.TERMS_OF_SERVICE -> termsOfServiceText
-        LegalContentType.PRIVACY_POLICY -> privacyPolicyText
-    }
-    val scrollState = rememberScrollState()
-    val configuration = LocalConfiguration.current
-    val screenWidthDp = configuration.screenWidthDp.dp
-
-    val dialogModifier = Modifier
-        .fillMaxHeight(0.85f) // Use 85% of the available height
-        .then(
-            if (isLandscape) {
-                // In landscape, use 90% of the screen width, capped at 800dp.
-                // Min width is 320dp.
-                Modifier.widthIn(
-                    min = 320.dp,
-                    max = min(screenWidthDp * 0.9f, 800.dp) // Corrected logic
-                )
-            } else {
-                // In portrait, use 85% of the screen width, capped at 560dp.
-                // Min width is 280dp.
-                Modifier.widthIn(
-                    min = 280.dp,
-                    max = min(screenWidthDp * 0.85f, 560.dp)
-                )
-            }
-        )
-
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = {
-            Text(
-                text = title,
-                style = MaterialTheme.typography.headlineSmall,
-                color = MaterialTheme.colorScheme.onSurface
-            )
-        },
-        text = {
-            Column(
-                modifier = Modifier
-                    .verticalScroll(scrollState)
-            ) {
-                Text(
-                    text = content,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-        },
-        confirmButton = {
-            TextButton(onClick = onDismiss) {
-                Text("Close")
-            }
-        },
-        modifier = dialogModifier
-    )
-}
