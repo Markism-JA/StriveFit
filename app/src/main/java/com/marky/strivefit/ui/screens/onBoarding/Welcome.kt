@@ -196,14 +196,12 @@ private fun LandscapeWelcomeLayout(
     onGuestClick: () -> Unit,
     onLoginClick: () -> Unit
 ) {
-    // Adjust logo size based on available height
     val logoSize = when (heightSizeClass) {
         WindowHeightSizeClass.Expanded -> 200.dp
         WindowHeightSizeClass.Medium -> 160.dp
         else -> 120.dp
     }
 
-    // Adjust text logo width based on available space
     val textLogoWidth = when (heightSizeClass) {
         WindowHeightSizeClass.Expanded -> 220.dp
         WindowHeightSizeClass.Medium -> 180.dp
