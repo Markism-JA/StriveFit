@@ -42,11 +42,13 @@ android {
 }
 
 dependencies {
+
     //firebase
     //noinspection UseTomlInstead
     implementation(platform("com.google.firebase:firebase-bom:33.14.0"))
     //noinspection UseTomlInstead
     implementation("com.google.firebase:firebase-analytics")
+    //noinspection UseTomlInstead
     implementation("com.google.firebase:firebase-firestore-ktx")
 
     // Hilt
@@ -73,7 +75,7 @@ dependencies {
 
     // Room
     implementation(libs.androidx.annotation)
-    implementation(libs.androidx.room.ktx) // Add this for coroutine support in Room
+    implementation(libs.androidx.room.ktx)
 
     // Font
     implementation(libs.androidx.ui.text.google.fonts)
@@ -81,6 +83,7 @@ dependencies {
 
     // Icon
     implementation(libs.icons.lucide)
+
     // Testing
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
@@ -100,4 +103,7 @@ dependencies {
     implementation(libs.coil.compose)
     ksp(libs.androidx.room.compiler)
 
+    //Health Connect
+    //noinspection UseTomlInstead
+    implementation("androidx.health.connect:connect-client:1.1.0-rc01")
 }

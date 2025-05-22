@@ -3,7 +3,7 @@ import androidx.room.RoomDatabase
 import java.util.Date
 
 enum class UserSex {
-    MALE, FEMALE, OTHER, PREFER_NOT_TO_SAY
+    MALE, FEMALE
 }
 
 enum class ExperienceLevel {
