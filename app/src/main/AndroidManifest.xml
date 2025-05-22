@@ -2,7 +2,41 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools" >
 
+    <!-- For Firebase -->
     <uses-permission android:name="android.permission.INTERNET"/>
+
+    <!-- Health Connect -->
+    <!-- Route Data -->
+    <uses-permission android:name="android.permission.healht.READ_EXERCISE"/>
+
+    <!-- Distance -->
+    <uses-permission android:name="android.permission.health.READ_DISTANCE"/>
+
+    <!-- Performance (Running & Cycling) -->
+    <!-- Average/Current Pace & Speed -->
+    <uses-permission android:name="android.permission.health.READ_SPEED"/>
+
+    <!-- Cadence (Running & Cycling) -->
+    <uses-permission android:name="android.permission.health.READ_STEPS_CADENCE" />
+    <uses-permission android:name="android.permission.health.READ_CYCLING_PEDALING_CADENCE" />
+
+    <!-- Power(Cycling) -->
+    <uses-permission android:name="android.permission.health.READ_POWER" />
+
+    <!-- Calories Burned (ActiveCaloriesBurnedRecord) -->
+    <uses-permission android:name="android.permission.health.READ_ACTIVE_CALORIES_BURNED"/>
+    <uses-permission android:name="android.permission.health.READ_TOTAL_CALORIES_BURNED" />
+
+    <!-- Environmental Metrics -->
+    <!-- Elevation Gain -->
+    <uses-permission android:name="android.permission.health.READ_ELEVATION_GAINED"/>
+
+    <!-- Steps ) -->
+    <uses-permission android:name="android.permission.health.READ_STEPS"/>
+
+
+
+    <uses-permission android:name="android.permission.health.READ_STEPS"/>
     <application
         android:name=".StriveFitApp"
         android:allowBackup="true"
@@ -20,10 +54,21 @@
             android:theme="@style/Theme.StriveFit" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <activity
+            android:name=".permissions.HealthConnect"
+        android:exported="true"
+        android:permission="com.google.android.apps.healthdata.permission.MANAGE_HEALTH_DATA" >
+        <intent-filter>
+            <action android:name="androidx.health.ACTION_MANAGE_HEALTH_PERMISSIONS" />
+        </intent-filter>
+        </activity>
     </application>
 
+    <queries>
+        <package android:name="com.google.android.apps.healthdata"/>
+    </queries>
 </manifest>
