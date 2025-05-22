@@ -1,7 +1,5 @@
-package com.marky.strivefit.ui.screens.mainApp
+package com.marky.strivefit.ui.components.mainApp
 
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.getValue
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -32,20 +30,35 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import com.marky.strivefit.ui.theme.CommonColors
 import com.marky.strivefit.ui.theme.LocalThemeMode
 import com.marky.strivefit.ui.theme.ThemeMode
+import androidx.compose.runtime.getValue
+import com.marky.strivefit.ui.navigation.MainRoutes
 
 @Composable
 fun NavigationBar(
     navController: NavHostController,
-    screens: List<BottomBarScreen>
+    screens: List<MainRoutes>,
+    modifier: Modifier = Modifier.Companion
 ) {
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentDestination = navBackStackEntry?.destination
 
     Box(
-        modifier = Modifier.Companion
+        modifier = modifier
             .fillMaxWidth()
             .height(80.dp)
     ) {
+        // Secondary panel/background that will show behind the main surface
+        // This creates the appearance of a cutout when combined with the transparent area in the main surface
+        Surface(
+            modifier = Modifier.Companion
+                .fillMaxWidth()
+                .align(Alignment.Companion.BottomCenter)
+                .height(64.dp),
+            color = Color.Companion.Transparent,
+            shape = RoundedCornerShape(24.dp)
+        ) {}
+
+        // Main navigation surface
         Surface(
             modifier = Modifier.Companion
                 .fillMaxWidth()
@@ -56,7 +69,7 @@ fun NavigationBar(
                 ThemeMode.DARK -> CommonColors.bottomNavDark
                 ThemeMode.SYSTEM -> if (isSystemInDarkTheme()) CommonColors.bottomNavDark else CommonColors.bottomNavLight
             },
-            shape = RoundedCornerShape(24.dp)
+            shape = androidx.compose.foundation.shape.RoundedCornerShape(24.dp)
         ) {
             Row(
                 modifier = Modifier.Companion
@@ -106,6 +119,7 @@ fun NavigationBar(
             }
         }
 
+        // Selected item indicators (the floating buttons)
         Row(
             modifier = Modifier.Companion
                 .fillMaxWidth()

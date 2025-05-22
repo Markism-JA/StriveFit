@@ -3,6 +3,7 @@ package com.marky.strivefit.ui.components.animated
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
+import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -17,7 +18,8 @@ fun AnimatedWelcomeButton(
     onSignUpClick: () -> Unit,
     onGuestClick: () -> Unit,
     animationTriggered: Boolean,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    widthSizeClass: WindowWidthSizeClass = WindowWidthSizeClass.Medium
 ) {
     val buttonsAlpha by animateFloatAsState(
         targetValue = if (animationTriggered) 1f else 0f,
@@ -30,6 +32,13 @@ fun AnimatedWelcomeButton(
         animationSpec = tween(durationMillis = 800, easing = EaseOutCirc),
         label = "buttonsOffset"
     )
+
+    // Adjust button width based on screen size
+    val buttonWidth = when (widthSizeClass) {
+        WindowWidthSizeClass.Expanded -> 280.dp
+        WindowWidthSizeClass.Medium -> 240.dp
+        else -> 200.dp
+    }
 
     Box(
         modifier = modifier
@@ -44,25 +53,21 @@ fun AnimatedWelcomeButton(
                 text = "Sign Up",
                 backgroundColor = MaterialTheme.colorScheme.primary,
                 textColor = MaterialTheme.colorScheme.onPrimary,
-                modifier = Modifier.padding(top = 20.dp)
+                modifier = Modifier
+                    .padding(top = 20.dp)
+                    .width(buttonWidth)
             )
 
-            Box(
-                modifier = Modifier
-                    .graphicsLayer {
-                        alpha = if (buttonsAlpha > 0.5f) ((buttonsAlpha - 0.5f) * 2f) else 0f
-                        scaleX = if (buttonsAlpha > 0.5f) 0.8f + ((buttonsAlpha - 0.5f) * 0.4f) else 0.8f
-                        scaleY = if (buttonsAlpha > 0.5f) 0.8f + ((buttonsAlpha - 0.5f) * 0.4f) else 0.8f
-                    }
-            ) {
+
                 AnimatedCustomButton(
                     onClick = onGuestClick,
                     text = "Continue as Guest",
                     backgroundColor = MaterialTheme.colorScheme.surfaceVariant,
                     textColor = MaterialTheme.colorScheme.onBackground,
-                    modifier = Modifier.padding(top = 10.dp).width(200.dp)
+                    modifier = Modifier
+                        .padding(top = 10.dp)
+                        .width(buttonWidth)
                 )
-            }
         }
     }
 }

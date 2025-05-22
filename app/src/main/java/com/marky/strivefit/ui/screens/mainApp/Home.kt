@@ -1,7 +1,8 @@
 package com.marky.strivefit.ui.screens.mainApp
 
+import android.content.res.Configuration
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
@@ -20,17 +21,20 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.composables.icons.lucide.Flame
-import com.composables.icons.lucide.PersonStanding
 import com.composables.icons.lucide.Footprints
-import com.marky.strivefit.ui.theme.LocalThemeMode
-import com.marky.strivefit.ui.theme.ThemeMode
+import com.composables.icons.lucide.Lucide
+import com.composables.icons.lucide.PersonStanding
 
 @Composable
 fun HomeScreen() {
+    val configuration = LocalConfiguration.current
+    val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -40,53 +44,83 @@ fun HomeScreen() {
     ) {
         Spacer(modifier = Modifier.height(16.dp))
 
-        WorkoutCard()
-
-        Spacer(modifier = Modifier.height(32.dp))
-
-        // Progress Stats Section
-        Text(
-            text = "Your Progress",
-            style = MaterialTheme.typography.titleLarge,
-            fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colorScheme.onBackground
-        )
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        ProgressStats()
-
-        Spacer(modifier = Modifier.height(32.dp))
-
-        // Today's Activity Section
-        Text(
-            text = "Today's Activity",
-            style = MaterialTheme.typography.titleLarge,
-            fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colorScheme.onBackground
-        )
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        ActivitySummary()
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        // Exercise Summary Section
-        Text(
-            text = "Exercise Summary",
-            style = MaterialTheme.typography.titleLarge,
-            fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colorScheme.onBackground
-        )
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        ExerciseSummary()
+        if (isLandscape) {
+            LandscapeHomeScreenContent()
+        } else {
+            PortraitHomeScreenContent()
+        }
 
         Spacer(modifier = Modifier.height(24.dp))
     }
 }
+
+@Composable
+fun PortraitHomeScreenContent() {
+    WorkoutCard()
+    Spacer(modifier = Modifier.height(32.dp))
+    ProgressSection()
+    Spacer(modifier = Modifier.height(32.dp))
+    ActivitySection()
+    Spacer(modifier = Modifier.height(16.dp))
+    ExerciseSummarySection()
+}
+
+@Composable
+fun LandscapeHomeScreenContent() {
+    WorkoutCard()
+    Spacer(modifier = Modifier.height(32.dp))
+
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
+        Column(modifier = Modifier.weight(1f)) {
+            ProgressSection()
+        }
+        Column(modifier = Modifier.weight(1f)) {
+            ActivitySection()
+        }
+    }
+    Spacer(modifier = Modifier.height(32.dp))
+    ExerciseSummarySection()
+}
+
+@Composable
+fun ProgressSection() {
+    Text(
+        text = "Your Progress",
+        style = MaterialTheme.typography.titleLarge,
+        fontWeight = FontWeight.Bold,
+        color = MaterialTheme.colorScheme.onBackground
+    )
+    Spacer(modifier = Modifier.height(16.dp))
+    ProgressStats()
+}
+
+@Composable
+fun ActivitySection() {
+    Text(
+        text = "Today's Activity",
+        style = MaterialTheme.typography.titleLarge,
+        fontWeight = FontWeight.Bold,
+        color = MaterialTheme.colorScheme.onBackground
+    )
+    Spacer(modifier = Modifier.height(16.dp))
+    ActivitySummary()
+}
+
+@Composable
+fun ExerciseSummarySection() {
+    Text(
+        text = "Exercise Summary",
+        style = MaterialTheme.typography.titleLarge,
+        fontWeight = FontWeight.Bold,
+        color = MaterialTheme.colorScheme.onBackground
+    )
+    Spacer(modifier = Modifier.height(16.dp))
+    ExerciseSummary()
+}
+
 
 @Composable
 fun WorkoutCard() {
@@ -150,8 +184,8 @@ fun WorkoutCard() {
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(4.dp),
-                color = MaterialTheme.colorScheme.secondaryContainer,
-                trackColor = Color(0xFF3A2A47)
+                color = MaterialTheme.colorScheme.primary,
+                trackColor = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
     }
@@ -164,7 +198,8 @@ fun ProgressStats() {
         shape = RoundedCornerShape(24.dp),
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surfaceVariant
-        )
+        ),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline)
     ) {
         Column(
             modifier = Modifier.padding(24.dp)
@@ -184,9 +219,9 @@ fun ProgressStats() {
                 progress = 0.6f,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(8.dp),
-                color = Color(0xFFBF5AF2),
-                trackColor = Color(0xFF2C2C2E)
+                    .height(4.dp),
+                color = MaterialTheme.colorScheme.primary,
+                trackColor = MaterialTheme.colorScheme.onSurfaceVariant
             )
 
             Spacer(modifier = Modifier.height(8.dp))
@@ -194,7 +229,7 @@ fun ProgressStats() {
             Text(
                 text = "60% to next level",
                 style = MaterialTheme.typography.bodyMedium,
-                color = Color.Gray,
+                color = Color.Gray, // Reference Secondary Text Color
                 textAlign = TextAlign.End,
                 modifier = Modifier.fillMaxWidth()
             )
@@ -228,9 +263,8 @@ fun ActivitySummary() {
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
-        // Calories Burned Card
         ActivityCard(
-            icon = { Icon(com.composables.icons.lucide.Lucide.Flame, contentDescription = "Calories", tint = Color.White) },
+            icon = { Icon(Lucide.Flame, contentDescription = "Calories", tint = Color.White) },
             value = "356",
             label = "Calories Burned",
             modifier = Modifier.weight(1f)
@@ -238,9 +272,8 @@ fun ActivitySummary() {
 
         Spacer(modifier = Modifier.width(16.dp))
 
-        // Steps Card
         ActivityCard(
-            icon = { Icon(com.composables.icons.lucide.Lucide.PersonStanding, contentDescription = "Steps", tint = Color.White) },
+            icon = { Icon(Lucide.PersonStanding, contentDescription = "Steps", tint = Color.White) }, // Icon tint remains white
             value = "7,245",
             label = "Steps",
             modifier = Modifier.weight(1f)
@@ -255,16 +288,20 @@ fun ActivityCard(
     label: String,
     modifier: Modifier = Modifier
 ) {
+    val cardBackgroundColor = MaterialTheme.colorScheme.surfaceVariant
+    val iconBackgroundColor = Color(0xFF2C2C2E)
+
+    val valueTextColor = MaterialTheme.colorScheme.onBackground
+    val labelTextColor = Color.Gray
+
+
     Card(
-        modifier = modifier,
+        modifier = modifier.fillMaxWidth(),
         shape = RoundedCornerShape(24.dp),
         colors = CardDefaults.cardColors(
-            containerColor = when (LocalThemeMode.current){
-                ThemeMode.LIGHT -> Color(0xFF1C1C1E)
-                ThemeMode.DARK -> MaterialTheme.colorScheme.surfaceVariant
-                ThemeMode.SYSTEM -> if (isSystemInDarkTheme()) MaterialTheme.colorScheme.surfaceVariant else Color(0xFF1C1C1E)
-            }
-        )
+            containerColor = cardBackgroundColor
+        ),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline)
     ) {
         Column(
             modifier = Modifier.padding(24.dp),
@@ -273,7 +310,7 @@ fun ActivityCard(
             Box(
                 modifier = Modifier
                     .size(56.dp)
-                    .background(Color(0xFF2C2C2E), CircleShape)
+                    .background(iconBackgroundColor, CircleShape)
                     .clip(CircleShape),
                 contentAlignment = Alignment.Center
             ) {
@@ -286,13 +323,13 @@ fun ActivityCard(
                 text = value,
                 style = MaterialTheme.typography.headlineLarge,
                 fontWeight = FontWeight.Bold,
-                color = Color.White
+                color = valueTextColor
             )
 
             Text(
                 text = label,
                 style = MaterialTheme.typography.bodyMedium,
-                color = Color.Gray
+                color = labelTextColor
             )
         }
     }
@@ -300,34 +337,45 @@ fun ActivityCard(
 
 @Composable
 fun ExerciseSummary() {
+    val cardBackgroundColor = MaterialTheme.colorScheme.surfaceVariant
+    val iconBackgroundColor = Color(0xFF2C2C2E)
+    val titleTextColor = MaterialTheme.colorScheme.onBackground
+    val detailsTextColor = Color.Gray
+    val calorieAccentColor = Color(0xFFBF5AF2)
+
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(24.dp),
         colors = CardDefaults.cardColors(
-            containerColor = when (LocalThemeMode.current){
-                ThemeMode.LIGHT -> Color(0xFF1C1C1E)
-                ThemeMode.DARK -> MaterialTheme.colorScheme.surfaceVariant
-                ThemeMode.SYSTEM -> if (isSystemInDarkTheme()) MaterialTheme.colorScheme.surfaceVariant else Color(0xFF1C1C1E)
-            }
-        )
+            containerColor = cardBackgroundColor
+        ),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline)
     ) {
         Column(
             modifier = Modifier.padding(vertical = 16.dp)
         ) {
             ExerciseItem(
-                icon = { Icon(com.composables.icons.lucide.Lucide.Flame, contentDescription = "Morning Workout", tint = Color.White) },
+                icon = { Icon(Lucide.Flame, contentDescription = "Morning Workout", tint = Color.White) },
                 title = "Morning Workout",
                 details = "25 minutes • Upper Body",
-                calories = "156 cal"
+                calories = "156 cal",
+                iconBackgroundColor = iconBackgroundColor,
+                contentColor = titleTextColor,
+                secondaryContentColor = detailsTextColor,
+                accentCalorieColor = calorieAccentColor
             )
 
-            Divider()
+            Divider(color = iconBackgroundColor)
 
             ExerciseItem(
-                icon = { Icon(com.composables.icons.lucide.Lucide.Footprints, contentDescription = "Lunch Walk", tint = Color.White) },
+                icon = { Icon(Lucide.Footprints, contentDescription = "Lunch Walk", tint = Color.White) },
                 title = "Lunch Walk",
                 details = "20 minutes • 1.2 miles",
-                calories = "110 cal"
+                calories = "110 cal",
+                iconBackgroundColor = iconBackgroundColor,
+                contentColor = titleTextColor,
+                secondaryContentColor = detailsTextColor,
+                accentCalorieColor = calorieAccentColor
             )
         }
     }
@@ -338,7 +386,11 @@ fun ExerciseItem(
     icon: @Composable () -> Unit,
     title: String,
     details: String,
-    calories: String
+    calories: String,
+    iconBackgroundColor: Color,
+    contentColor: Color,
+    secondaryContentColor: Color,
+    accentCalorieColor: Color
 ) {
     Row(
         modifier = Modifier
@@ -349,7 +401,7 @@ fun ExerciseItem(
         Box(
             modifier = Modifier
                 .size(48.dp)
-                .background(Color(0xFF2C2C2E), CircleShape)
+                .background(iconBackgroundColor, CircleShape)
                 .clip(CircleShape),
             contentAlignment = Alignment.Center
         ) {
@@ -365,13 +417,13 @@ fun ExerciseItem(
                 text = title,
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
-                color = Color.White
+                color = contentColor
             )
 
             Text(
                 text = details,
                 style = MaterialTheme.typography.bodyMedium,
-                color = Color.Gray
+                color = secondaryContentColor
             )
         }
 
@@ -379,17 +431,18 @@ fun ExerciseItem(
             text = calories,
             style = MaterialTheme.typography.titleMedium,
             fontWeight = FontWeight.Bold,
-            color = Color(0xFFBF5AF2)
+            color = accentCalorieColor
         )
     }
 }
 
 @Composable
-fun Divider() {
+fun Divider(modifier: Modifier = Modifier, color: Color? = null) {
+    val dividerColor = color ?: Color(0xFF2C2C2E)
     Box(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .height(1.dp)
-            .background(Color(0xFF2C2C2E))
+            .background(MaterialTheme.colorScheme.outline)
     )
 }

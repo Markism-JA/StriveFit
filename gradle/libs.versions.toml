@@ -1,16 +1,11 @@
-# Option 1: Update your KSP version to be compatible with Kotlin 2.0.21
-# Replace your current ksp version in [versions] with:
-## Option 1: Use a valid KSP version for Kotlin 2.0.21
 [versions]
 agp = "8.10.0"
-androidIconics = "3.0.4"
+coilCompose = "2.6.0"
 coreSplashscreen = "1.0.1"
-hiltAndroid = "2.49"
 hiltAndroidVersion = "2.56.2"
-kotlin = "2.0.21"
-ksp = "2.1.21-2.0.1"  # This is a likely valid version
+kotlin ="2.1.21"
+ksp = "2.1.21-2.0.1"
 coreKtx = "1.16.0"
-# ... rest of your versions remain the same
 junit = "4.13.2"
 junitVersion = "1.2.1"
 espressoCore = "3.6.1"
@@ -24,6 +19,10 @@ uiTextGoogleFonts = "1.8.1"
 annotation = "1.9.1"
 hiltNavigationCompose = "1.2.0"
 iconsLucide = "1.0.0"
+material3WindowSizeClassAndroid = "1.3.2"
+window = "1.3.0"
+material3WindowSizeClass = "1.3.2"
+room = "2.6.1"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -32,6 +31,7 @@ androidx-hilt-navigation-compose = { module = "androidx.hilt:hilt-navigation-com
 androidx-navigation-compose = { module = "androidx.navigation:navigation-compose", version.ref = "navigationCompose" }
 androidx-security-crypto = { module = "androidx.security:security-crypto", version.ref = "securityCrypto" }
 androidx-ui-text-google-fonts = { module = "androidx.compose.ui:ui-text-google-fonts", version.ref = "uiTextGoogleFonts" }
+coil-compose = { module = "io.coil-kt:coil-compose", version.ref = "coilCompose" }
 hilt-android-v2562 = { module = "com.google.dagger:hilt-android", version.ref = "hiltAndroidVersion" }
 hilt-android-compiler = { module = "com.google.dagger:hilt-android-compiler", version.ref = "hiltAndroidVersion" }
 icons-lucide = { module = "com.composables:icons-lucide", version.ref = "iconsLucide" }
@@ -48,8 +48,19 @@ androidx-ui-tooling-preview = { group = "androidx.compose.ui", name = "ui-toolin
 androidx-ui-test-manifest = { group = "androidx.compose.ui", name = "ui-test-manifest" }
 androidx-ui-test-junit4 = { group = "androidx.compose.ui", name = "ui-test-junit4" }
 androidx-material3 = { group = "androidx.compose.material3", name = "material3" }
-androidx-room-common = { group = "androidx.room", name = "room-common", version.ref = "roomCommon" }
+androidx-security-crypto-ktx = { group = "androidx.security", name = "security-crypto-ktx"}
 androidx-annotation = { group = "androidx.annotation", name = "annotation", version.ref = "annotation" }
+
+#Room
+androidx-room-common = { group = "androidx.room", name = "room-common", version.ref = "roomCommon" }
+androidx-room-runtime = { group = "androidx.room", name = "room-runtime", version.ref = "room" }
+androidx-room-compiler = { group = "androidx.room", name = "room-compiler", version.ref = "room" }
+androidx-room-ktx = { group = "androidx.room", name = "room-ktx", version.ref = "room" }
+
+# windows
+androidx-material3-window-size-class1-android = { group = "androidx.compose.material3", name = "material3-window-size-class-android", version.ref = "material3WindowSizeClassAndroid" }
+androidx-material3-window-size-class1 = { module = "androidx.compose.material3:material3-window-size-class", version.ref = "material3WindowSizeClass" }
+androidx-window = { group = "androidx.window", name = "window", version.ref = "window" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

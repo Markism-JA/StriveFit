@@ -1,7 +1,5 @@
 package com.marky.strivefit.ui.components
 
-// AnimatedLogo.kt
-
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.runtime.*
