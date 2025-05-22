@@ -1,5 +1,8 @@
 package com.marky.strivefit.ui.screens.onBoarding
 
+import LegalContentType // Assuming this is defined elsewhere
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.ScrollState
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
@@ -7,33 +10,60 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
-import androidx.compose.material3.HorizontalDivider
+//import androidx.compose.material3.HorizontalDivider // Not used in the provided snippet directly, but good practice to keep if used elsewhere
+import androidx.compose.material3.windowsizeclass.WindowHeightSizeClass
+import androidx.compose.material3.windowsizeclass.WindowSizeClass
+import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextDecoration
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.marky.strivefit.ui.components.AnimatedCustomButton
 import com.marky.strivefit.ui.components.FormField
 import com.marky.strivefit.ui.components.GoBackButton
 import com.marky.strivefit.ui.components.GoogleButton
-import com.marky.strivefit.ui.theme.StriveFitTheme
 import com.marky.strivefit.ui.components.PasswordField
-import com.marky.strivefit.ui.components.icon.GoogleIcon
+import com.marky.strivefit.ui.utilities.calculateWindowHeightSizeClass
+import com.marky.strivefit.ui.utilities.calculateWindowWidthSizeClass
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 @Composable
 fun SignUp(
+    windowSizeClass: WindowSizeClass? = null,
     onBackClick: () -> Unit = {},
     onSignUpClick: () -> Unit = {},
     onGoogleSignUpClick: () -> Unit = {}
 ) {
+    val configuration = LocalConfiguration.current
+
+    val screenWidth = configuration.screenWidthDp.dp
+    val screenHeight = configuration.screenHeightDp.dp
+
+    val widthSizeClass by remember(windowSizeClass, screenWidth) {
+        mutableStateOf(windowSizeClass?.widthSizeClass ?: calculateWindowWidthSizeClass(screenWidth))
+    }
+
+    val heightSizeClass by remember(windowSizeClass, screenHeight) {
+        mutableStateOf(windowSizeClass?.heightSizeClass ?: calculateWindowHeightSizeClass(screenHeight))
+    }
+
+    val aspectRatio = screenWidth / screenHeight
+    val isLandscape = aspectRatio > 1.2f && widthSizeClass != WindowWidthSizeClass.Compact
+
+    val paddingStart = when (isLandscape) {
+        true -> 18.dp
+        false -> 5.dp
+    }
+
     var fullName by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
@@ -49,10 +79,16 @@ fun SignUp(
 
     val scope = rememberCoroutineScope()
     var isVisible by remember { mutableStateOf(false) }
+    val scrollState = rememberScrollState()
+
+    // State for managing the legal content dialog
+    var showLegalDialog by remember { mutableStateOf<LegalContentType?>(null) }
+
 
     LaunchedEffect(Unit) {
         isVisible = true
     }
+
 
     Box(
         modifier = Modifier
@@ -60,7 +96,7 @@ fun SignUp(
             .background(MaterialTheme.colorScheme.background)
             .padding(16.dp)
             .padding(top = 20.dp)
-            .padding(start = 5.dp, end = 5.dp)
+            .padding(start = paddingStart, end = 5.dp)
     ) {
         AnimatedVisibility(
             visible = isVisible,
@@ -68,173 +104,450 @@ fun SignUp(
                 initialOffsetY = { it / 2 },
                 animationSpec = tween(500)
             ),
-            exit = fadeOut() + slideOutVertically()
+            exit = fadeOut(tween(300)) + slideOutVertically(targetOffsetY = {it/2}, animationSpec = tween(300))
         ) {
-            Column(
-                modifier = Modifier.fillMaxSize()
-            ) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 16.dp)
-                ) {
-                    GoBackButton(
-                        onClick = {
+            when {
+                isLandscape -> {
+                    SignUpLandscapeLayout(
+                        fullName = fullName,
+                        onFullNameChange = { fullName = it },
+                        isFullNameFocused = isFullNameFocused,
+                        onFullNameFocusChanged = { isFullNameFocused = it },
+                        email = email,
+                        onEmailChange = { email = it },
+                        isEmailFocused = isEmailFocused,
+                        onEmailFocusChanged = { isEmailFocused = it },
+                        password = password,
+                        onPasswordChange = { password = it },
+                        isPasswordVisible = isPasswordVisible,
+                        onTogglePasswordVisibility = { isPasswordVisible = !isPasswordVisible },
+                        onToggleConfirmPasswordVisibility = { isConfirmPasswordVisible = !isConfirmPasswordVisible },
+                        isPasswordFocused = isPasswordFocused,
+                        onPasswordFocusChanged = { isPasswordFocused = it },
+                        confirmPassword = confirmPassword,
+                        onConfirmPasswordChange = { confirmPassword = it },
+                        isConfirmPasswordVisible = isConfirmPasswordVisible,
+                        isConfirmPasswordFocused = isConfirmPasswordFocused,
+                        onConfirmPasswordFocusChanged = { isConfirmPasswordFocused = it },
+                        isTermsAccepted = isTermsAccepted,
+                        onTermsAcceptedChange = { isTermsAccepted = it },
+                        heightSizeClass = heightSizeClass,
+                        onBackClick = {
                             scope.launch {
                                 isVisible = false
                                 delay(300)
                                 onBackClick()
                             }
                         },
-                        modifier = Modifier.align(Alignment.CenterStart)
-                    )
-
-                    Text(
-                        text = "Create Account",
-                        style = MaterialTheme.typography.headlineMedium,
-                        color = MaterialTheme.colorScheme.onBackground,
-                        modifier = Modifier.align(Alignment.Center)
+                        onSignUpClick = onSignUpClick,
+                        onGoogleSignUpClick = onGoogleSignUpClick,
+                        onTermsClick = { showLegalDialog = LegalContentType.TERMS_OF_SERVICE },
+                        onPrivacyClick = { showLegalDialog = LegalContentType.PRIVACY_POLICY },
+                        scrollState = scrollState
                     )
                 }
+                else -> {
+                    SignUpPortraitLayout(
+                        fullName = fullName,
+                        onFullNameChange = { fullName = it },
+                        isFullNameFocused = isFullNameFocused,
+                        onFullNameFocusChanged = { isFullNameFocused = it },
+                        email = email,
+                        onEmailChange = { email = it },
+                        isEmailFocused = isEmailFocused,
+                        onEmailFocusChanged = { isEmailFocused = it },
+                        password = password,
+                        onPasswordChange = { password = it },
+                        isPasswordVisible = isPasswordVisible,
+                        onTogglePasswordVisibility = { isPasswordVisible = !isPasswordVisible },
+                        isPasswordFocused = isPasswordFocused,
+                        onPasswordFocusChanged = { isPasswordFocused = it },
+                        confirmPassword = confirmPassword,
+                        onConfirmPasswordChange = { confirmPassword = it },
+                        isConfirmPasswordVisible = isConfirmPasswordVisible,
+                        onToggleConfirmPasswordVisibility = { isConfirmPasswordVisible = !isConfirmPasswordVisible },
+                        isConfirmPasswordFocused = isConfirmPasswordFocused,
+                        onConfirmPasswordFocusChanged = { isConfirmPasswordFocused = it },
+                        isTermsAccepted = isTermsAccepted,
+                        onTermsAcceptedChange = { isTermsAccepted = it },
+                        heightSizeClass = heightSizeClass,
+                        onBackClick = {
+                            scope.launch {
+                                isVisible = false
+                                delay(300)
+                                onBackClick()
+                            }
+                        },
+                        onSignUpClick = onSignUpClick,
+                        onGoogleSignUpClick = onGoogleSignUpClick,
+                        onTermsClick = { showLegalDialog = LegalContentType.TERMS_OF_SERVICE },
+                        onPrivacyClick = { showLegalDialog = LegalContentType.PRIVACY_POLICY },
+                        scrollState = scrollState
+                    )
+                }
+            }
+        }
+        showLegalDialog?.let { type ->
+            LegalContentDialog(
+                type = type,
+                onDismiss = { showLegalDialog = null },
+                isLandscape = isLandscape
+            )
+        }
+    }
+}
 
-                Spacer(modifier = Modifier.height(16.dp))
+@Composable
+private fun SignUpPortraitLayout(
+    fullName: String,
+    onFullNameChange: (String) -> Unit,
+    isFullNameFocused: Boolean,
+    onFullNameFocusChanged: (Boolean) -> Unit,
+    email: String,
+    onEmailChange: (String) -> Unit,
+    isEmailFocused: Boolean,
+    onEmailFocusChanged: (Boolean) -> Unit,
+    password: String,
+    onPasswordChange: (String) -> Unit,
+    isPasswordVisible: Boolean,
+    onTogglePasswordVisibility: () -> Unit,
+    isPasswordFocused: Boolean,
+    onPasswordFocusChanged: (Boolean) -> Unit,
+    confirmPassword: String,
+    onConfirmPasswordChange: (String) -> Unit,
+    isConfirmPasswordVisible: Boolean,
+    onToggleConfirmPasswordVisibility: () -> Unit,
+    isConfirmPasswordFocused: Boolean,
+    onConfirmPasswordFocusChanged: (Boolean) -> Unit,
+    isTermsAccepted: Boolean,
+    onTermsAcceptedChange: (Boolean) -> Unit,
+    heightSizeClass: WindowHeightSizeClass,
+    onBackClick: () -> Unit,
+    onSignUpClick: () -> Unit,
+    onGoogleSignUpClick: () -> Unit,
+    onTermsClick: () -> Unit,
+    onPrivacyClick: () -> Unit,
+    scrollState: ScrollState
+) {
+    val verticalSpacing = when (heightSizeClass) {
+        WindowHeightSizeClass.Expanded -> 16.dp
+        WindowHeightSizeClass.Medium -> 12.dp
+        else -> 8.dp
+    }
 
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .verticalScroll(scrollState)
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = verticalSpacing)
+        ) {
+            GoBackButton(
+                onClick = onBackClick,
+                modifier = Modifier.align(Alignment.CenterStart)
+            )
+
+            Text(
+                text = "Create Account",
+                style = MaterialTheme.typography.headlineMedium,
+                color = MaterialTheme.colorScheme.onBackground,
+                modifier = Modifier.align(Alignment.Center)
+            )
+        }
+
+        Spacer(modifier = Modifier.height(verticalSpacing))
+
+        FormField(
+            label = "Full Name",
+            value = fullName,
+            onValueChange = onFullNameChange,
+            isFocused = isFullNameFocused,
+            onFocusChanged = onFullNameFocusChanged
+        )
+
+        Spacer(modifier = Modifier.height(verticalSpacing))
+
+        FormField(
+            label = "Email",
+            value = email,
+            onValueChange = onEmailChange,
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
+            isFocused = isEmailFocused,
+            onFocusChanged = onEmailFocusChanged
+        )
+
+        Spacer(modifier = Modifier.height(verticalSpacing))
+
+        PasswordField(
+            label = "Password",
+            value = password,
+            onValueChange = onPasswordChange,
+            isPasswordVisible = isPasswordVisible,
+            onTogglePasswordVisibility = onTogglePasswordVisibility,
+            isFocused = isPasswordFocused,
+            onFocusChanged = onPasswordFocusChanged,
+        )
+
+        Spacer(modifier = Modifier.height(verticalSpacing))
+
+        PasswordField(
+            label = "Confirm Password",
+            value = confirmPassword,
+            onValueChange = onConfirmPasswordChange,
+            isPasswordVisible = isConfirmPasswordVisible,
+            onTogglePasswordVisibility = onToggleConfirmPasswordVisibility,
+            isFocused = isConfirmPasswordFocused,
+            onFocusChanged = onConfirmPasswordFocusChanged,
+        )
+
+        Spacer(modifier = Modifier.height(verticalSpacing))
+
+        TermsAndConditionsCheckbox(
+            isChecked = isTermsAccepted,
+            onCheckedChange = onTermsAcceptedChange,
+            onTermsClick = onTermsClick,
+            onPrivacyClick = onPrivacyClick
+        )
+
+        Spacer(modifier = Modifier.height(verticalSpacing * 1.5f))
+
+        AnimatedCustomButton(
+            onClick = onSignUpClick,
+            text = "Sign up",
+            backgroundColor = MaterialTheme.colorScheme.primary,
+            textColor = MaterialTheme.colorScheme.onPrimary,
+            modifier = Modifier.fillMaxWidth(),
+            //enabled = isTermsAccepted // This was commented out in original, re-instating as it's common logic
+        )
+
+
+        GoogleButton(
+            onClick = onGoogleSignUpClick,
+            text = "Continue with Google",
+            backgroundColor = MaterialTheme.colorScheme.surfaceVariant,
+            textColor = MaterialTheme.colorScheme.onBackground,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = verticalSpacing)
+        )
+    }
+}
+
+@Composable
+private fun SignUpLandscapeLayout(
+    fullName: String,
+    onFullNameChange: (String) -> Unit,
+    isFullNameFocused: Boolean,
+    onFullNameFocusChanged: (Boolean) -> Unit,
+    email: String,
+    onEmailChange: (String) -> Unit,
+    isEmailFocused: Boolean,
+    onEmailFocusChanged: (Boolean) -> Unit,
+    password: String,
+    onPasswordChange: (String) -> Unit,
+    isPasswordVisible: Boolean,
+    onTogglePasswordVisibility: () -> Unit,
+    onToggleConfirmPasswordVisibility: () -> Unit,
+    isPasswordFocused: Boolean,
+    onPasswordFocusChanged: (Boolean) -> Unit,
+    confirmPassword: String,
+    onConfirmPasswordChange: (String) -> Unit,
+    isConfirmPasswordVisible: Boolean,
+    isConfirmPasswordFocused: Boolean,
+    onConfirmPasswordFocusChanged: (Boolean) -> Unit,
+    isTermsAccepted: Boolean,
+    onTermsAcceptedChange: (Boolean) -> Unit,
+    heightSizeClass: WindowHeightSizeClass,
+    onBackClick: () -> Unit,
+    onSignUpClick: () -> Unit,
+    onGoogleSignUpClick: () -> Unit,
+    onTermsClick: () -> Unit,
+    onPrivacyClick: () -> Unit,
+    scrollState: ScrollState
+) {
+    val verticalSpacing = when (heightSizeClass) {
+        WindowHeightSizeClass.Expanded -> 12.dp
+        WindowHeightSizeClass.Medium -> 8.dp
+        else -> 6.dp
+    }
+
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .verticalScroll(scrollState)
+            .padding(horizontal = 16.dp)
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = verticalSpacing)
+        ) {
+            GoBackButton(
+                onClick = onBackClick,
+                modifier = Modifier.align(Alignment.CenterStart)
+            )
+
+            Text(
+                text = "Create Account",
+                style = MaterialTheme.typography.headlineMedium,
+                color = MaterialTheme.colorScheme.onBackground,
+                modifier = Modifier.align(Alignment.Center)
+            )
+        }
+
+        Spacer(modifier = Modifier.height(verticalSpacing))
+
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            Column(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(verticalSpacing)
+            ) {
                 FormField(
                     label = "Full Name",
                     value = fullName,
-                    onValueChange = { fullName = it },
+                    onValueChange = onFullNameChange,
                     isFocused = isFullNameFocused,
-                    onFocusChanged = { isFullNameFocused = it }
+                    onFocusChanged = onFullNameFocusChanged
                 )
-
-                Spacer(modifier = Modifier.height(16.dp))
 
                 FormField(
                     label = "Email",
                     value = email,
-                    onValueChange = { email = it },
+                    onValueChange = onEmailChange,
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
                     isFocused = isEmailFocused,
-                    onFocusChanged = { isEmailFocused = it }
+                    onFocusChanged = onEmailFocusChanged
                 )
+            }
 
-                Spacer(modifier = Modifier.height(16.dp))
-
+            Column(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(verticalSpacing)
+            ) {
                 PasswordField(
                     label = "Password",
                     value = password,
-                    onValueChange = { password = it },
+                    onValueChange = onPasswordChange,
                     isPasswordVisible = isPasswordVisible,
-                    onTogglePasswordVisibility = { isPasswordVisible = !isPasswordVisible },
+                    onTogglePasswordVisibility = onTogglePasswordVisibility,
                     isFocused = isPasswordFocused,
-                    onFocusChanged = { isPasswordFocused = it }
+                    onFocusChanged = onPasswordFocusChanged,
                 )
-
-                Spacer(modifier = Modifier.height(16.dp))
 
                 PasswordField(
                     label = "Confirm Password",
                     value = confirmPassword,
-                    onValueChange = { confirmPassword = it },
+                    onValueChange = onConfirmPasswordChange,
                     isPasswordVisible = isConfirmPasswordVisible,
-                    onTogglePasswordVisibility = { isConfirmPasswordVisible = !isConfirmPasswordVisible },
                     isFocused = isConfirmPasswordFocused,
-                    onFocusChanged = { isConfirmPasswordFocused = it }
+                    onFocusChanged = onConfirmPasswordFocusChanged,
+                    onTogglePasswordVisibility = onToggleConfirmPasswordVisibility
                 )
+            }
+        }
 
-                Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(verticalSpacing))
 
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.padding(vertical = 8.dp)
-                ) {
-                    Checkbox(
-                        checked = isTermsAccepted,
-                        onCheckedChange = { isTermsAccepted = it },
-                        colors = CheckboxDefaults.colors(
-                            checkedColor = MaterialTheme.colorScheme.primary,
-                            uncheckedColor = MaterialTheme.colorScheme.outline,
-                            checkmarkColor = MaterialTheme.colorScheme.onPrimary
-                        ),
-                        modifier = Modifier.size(24.dp)
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(
-                        text = "I agree to the ",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onBackground
-                    )
-                    Text(
-                        text = "Terms of Service",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.primary,
-                        textDecoration = TextDecoration.Underline
-                    )
-                    Text(
-                        text = " & ",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onBackground
-                    )
-                    Text(
-                        text = "Privacy Policy",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.primary,
-                        textDecoration = TextDecoration.Underline
-                    )
-                }
+        TermsAndConditionsCheckbox(
+            isChecked = isTermsAccepted,
+            onCheckedChange = onTermsAcceptedChange,
+            onTermsClick = onTermsClick,
+            onPrivacyClick = onPrivacyClick,
+            modifier = Modifier.fillMaxWidth()
+        )
 
-                Spacer(modifier = Modifier.height(24.dp))
+        Spacer(modifier = Modifier.height(verticalSpacing * 1.5f))
 
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(16.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Column(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(verticalSpacing)
+            ) {
                 AnimatedCustomButton(
                     onClick = onSignUpClick,
                     text = "Sign up",
                     backgroundColor = MaterialTheme.colorScheme.primary,
                     textColor = MaterialTheme.colorScheme.onPrimary,
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth(),
+                    //enabled = isTermsAccepted // This was commented out in original, re-instating
                 )
+            }
 
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 16.dp)
-                ) {
-                    HorizontalDivider(
-                        modifier = Modifier.weight(1f),
-                        thickness = 2.dp,
-                        color = MaterialTheme.colorScheme.outline
-                    )
-                    Text(
-                        text = "or",
-                        color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f),
-                        modifier = Modifier.padding(horizontal = 16.dp)
-                    )
-                    HorizontalDivider(
-                        modifier = Modifier.weight(1f),
-                        thickness = 2.dp,
-                        color = MaterialTheme.colorScheme.outline
-                    )
-                }
 
+            Column(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(verticalSpacing)
+            ) {
                 GoogleButton(
                     onClick = onGoogleSignUpClick,
                     text = "Continue with Google",
                     backgroundColor = MaterialTheme.colorScheme.surfaceVariant,
                     textColor = MaterialTheme.colorScheme.onBackground,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 16.dp)
+                    modifier = Modifier.fillMaxWidth()
                 )
             }
         }
     }
 }
 
-
-@Preview(showBackground = true)
 @Composable
-fun CreateAccountScreenPreview() {
-    StriveFitTheme {
-        SignUp()
+private fun TermsAndConditionsCheckbox(
+    isChecked: Boolean,
+    onCheckedChange: (Boolean) -> Unit,
+    onTermsClick: () -> Unit,
+    onPrivacyClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = modifier.padding(vertical = 8.dp)
+    ) {
+        Checkbox(
+            checked = isChecked,
+            onCheckedChange = onCheckedChange,
+            colors = CheckboxDefaults.colors(
+                checkedColor = MaterialTheme.colorScheme.primary,
+                uncheckedColor = MaterialTheme.colorScheme.outline,
+                checkmarkColor = MaterialTheme.colorScheme.onPrimary
+            ),
+            modifier = Modifier.size(24.dp)
+        )
+        Spacer(modifier = Modifier.width(8.dp))
+        Text(
+            text = "I agree to the ",
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onBackground
+        )
+        Text(
+            text = "Terms of Service",
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.primary,
+            textDecoration = TextDecoration.Underline,
+            modifier = Modifier.clickable { onTermsClick() }
+        )
+        Text(
+            text = " & ",
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onBackground
+        )
+        Text(
+            text = "Privacy Policy",
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.primary,
+            textDecoration = TextDecoration.Underline,
+            modifier = Modifier.clickable { onPrivacyClick() }
+        )
     }
 }
+
+

@@ -1,4 +1,4 @@
-package com.marky.strivefit.ui.screens.mainApp
+package com.marky.strivefit.ui.components.mainApp
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.LinearOutSlowInEasing
@@ -32,7 +32,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -44,6 +43,8 @@ import com.composables.icons.lucide.Bike
 import com.composables.icons.lucide.Dumbbell
 import com.composables.icons.lucide.Footprints
 import com.composables.icons.lucide.Lucide
+import com.marky.strivefit.ui.components.mainApp.QuickActionItem
+import androidx.compose.runtime.setValue
 
 @Composable
 fun QuickActionFab(
