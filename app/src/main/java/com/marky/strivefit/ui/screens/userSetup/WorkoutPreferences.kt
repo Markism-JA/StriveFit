@@ -1,5 +1,6 @@
 package com.marky.strivefit.ui.screens.userSetup
 
+import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -9,11 +10,15 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material3.*
+import androidx.compose.material3.windowsizeclass.WindowHeightSizeClass
+import androidx.compose.material3.windowsizeclass.WindowSizeClass
+import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -31,14 +36,55 @@ import com.composables.icons.lucide.Settings
 import com.composables.icons.lucide.SunMedium
 import com.marky.strivefit.ui.components.AnimatedCustomButton
 import com.marky.strivefit.ui.components.GoBackButton
+import com.marky.strivefit.ui.utilities.calculateWindowHeightSizeClass
+import com.marky.strivefit.ui.utilities.calculateWindowWidthSizeClass
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.*
+import java.util.prefs.Preferences
 
 @Composable
 fun WorkoutPreferencesScreen(
+    windowSizeClass: WindowSizeClass? = null,
     onBackClick: () -> Unit = {},
     onCreatePlanClick: () -> Unit = {}
 ) {
+
+
+    val configuration = LocalConfiguration.current
+
+    val screenWidth = configuration.screenWidthDp.dp
+    val screenHeight = configuration.screenHeightDp.dp
+
+    val widthSizeClass by remember(windowSizeClass, screenWidth) {
+        mutableStateOf(
+            windowSizeClass?.widthSizeClass ?: calculateWindowWidthSizeClass(screenWidth)
+        )
+    }
+
+    val heightSizeClass by remember(windowSizeClass, screenHeight) {
+        mutableStateOf(
+            windowSizeClass?.heightSizeClass ?: calculateWindowHeightSizeClass(
+                screenHeight
+            )
+        )
+    }
+
+    val aspectRatio = screenWidth / screenHeight
+    val isLandscape = aspectRatio > 1.2f && widthSizeClass != WindowWidthSizeClass.Compact
+
+    val paddingStart = when (isLandscape) {
+        true -> 18.dp
+        false -> 5.dp
+    }
+    val scope = rememberCoroutineScope()
+    var isVisible by remember { mutableStateOf(false) }
+
+    val scrollState = rememberScrollState()
+
+
+
     // State for workout preferences
     var workoutsPerWeek by remember { mutableStateOf(4) }
     var workoutDurationMinutes by remember { mutableStateOf(45) }
@@ -101,242 +147,610 @@ fun WorkoutPreferencesScreen(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.SpaceBetween
         ) {
-            Column(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 16.dp)
+            when {
+                isLandscape -> {
+                    PreferencesLandscapeLayout(
+                        heightSizeClass = heightSizeClass,
+                        onBackClick = {
+                            scope.launch {
+                                isVisible = false
+                                delay(300)
+                                onBackClick()
+                            }
+                        },
+
+                        scrollState = scrollState,
+
+                        showTimePicker = showTimePicker,
+                        workoutsPerWeek = workoutsPerWeek,
+                        onWorkoutsPerWeek = { workoutsPerWeek = it },
+                        workoutDurationMinutes = workoutDurationMinutes,
+                        onWorkoutDurationMinutes = { workoutDurationMinutes = it },
+                        startTimeFormatted = startTimeFormatted,
+                        endTimeFormatted = endTimeFormatted,
+                        onShowTimePicker = { showTimePicker = it },
+                        onCreatePlanClick = onCreatePlanClick,
+                        preferredHour = preferredHour,
+                        preferredMinute = preferredMinute,
+                        isAm = isAm,
+                        onPreferredHour = { preferredHour = it },
+                        onPreferredMinute = { preferredMinute = it },
+                        onIsAm = { isAm = it },
+                    )
+                }
+
+                else -> {
+                    PreferencesPortraitLayout(
+                        heightSizeClass = heightSizeClass,
+                        onBackClick = {
+                            scope.launch {
+                                isVisible = false
+                                delay(300)
+                                onBackClick()
+                            }
+                        },
+
+                        scrollState = scrollState,
+                        showTimePicker = showTimePicker,
+                        workoutsPerWeek = workoutsPerWeek,
+                        onWorkoutsPerWeek = { workoutsPerWeek = it },
+                        workoutDurationMinutes = workoutDurationMinutes,
+                        onWorkoutDurationMinutes = { workoutDurationMinutes = it },
+                        startTimeFormatted = startTimeFormatted,
+                        endTimeFormatted = endTimeFormatted,
+                        onShowTimePicker = { showTimePicker = it },
+                        onCreatePlanClick = onCreatePlanClick,
+                        preferredHour = preferredHour,
+                        preferredMinute = preferredMinute,
+                        isAm = isAm,
+                        onPreferredHour = { preferredHour = it },
+                        onPreferredMinute = { preferredMinute = it },
+                        onIsAm = { isAm = it },
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun PreferencesLandscapeLayout(
+    heightSizeClass: WindowHeightSizeClass,
+    onBackClick: () -> Unit,
+    scrollState: ScrollState,
+    showTimePicker: Boolean,
+    workoutsPerWeek: Int,
+    onWorkoutsPerWeek: (Int) -> Unit,
+    workoutDurationMinutes: Int,
+    onWorkoutDurationMinutes: (Int) -> Unit,
+    startTimeFormatted: String,
+    endTimeFormatted: String,
+    onShowTimePicker: (Boolean) -> Unit,
+    onCreatePlanClick: () -> Unit,
+    preferredHour: Int,
+    preferredMinute: Int,
+    isAm: Boolean,
+    onPreferredHour: (Int) -> Unit,
+    onPreferredMinute: (Int) -> Unit,
+    onIsAm: (Boolean) -> Unit,
+) {
+    val verticalSpacing = when (heightSizeClass) {
+        WindowHeightSizeClass.Expanded -> 16.dp
+        WindowHeightSizeClass.Medium -> 12.dp
+        else -> 8.dp
+    }
+    Column(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 16.dp)
+        ) {
+            GoBackButton(
+                onClick = onBackClick,
+                modifier = Modifier.align(Alignment.CenterStart)
+            )
+
+
+            Text(
+                text = "Workout Preferences",
+                style = MaterialTheme.typography.headlineMedium,
+                color = MaterialTheme.colorScheme.onBackground,
+                modifier = Modifier
+                    .align(Alignment.Center)
+                    .padding(start = 30.dp)
+            )
+        }
+
+        Text(
+            text = "Set your workout preferences",
+            style = MaterialTheme.typography.bodyLarge,
+            color = MaterialTheme.colorScheme.onBackground,
+            textAlign = TextAlign.Center,
+            modifier = Modifier.padding(top = 16.dp, bottom = 24.dp)
+        )
+
+        LinearProgressIndicator(
+            progress = { 1.0f }, // 5 of 5 steps complete
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(4.dp),
+            color = MaterialTheme.colorScheme.primary,
+            trackColor = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+
+        Box(
+            modifier = Modifier.fillMaxWidth(),
+            contentAlignment = Alignment.CenterEnd
+        ) {
+            Text(
+                text = "Step 8 of 8",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onBackground,
+                modifier = Modifier.padding(top = 4.dp)
+            )
+        }
+
+        Spacer(modifier = Modifier.height(verticalSpacing))
+        // Workout preferences content
+        Column(
+            verticalArrangement = Arrangement.spacedBy(verticalSpacing),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            // Workouts per week slider
+            Column(modifier = Modifier.fillMaxWidth()) {
+                Text(
+                    text = "Workouts per week",
+                    style = MaterialTheme.typography.titleLarge,
+                    color = MaterialTheme.colorScheme.onBackground
+                )
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    GoBackButton(
-                        onClick = onBackClick,
-                        modifier = Modifier.align(Alignment.CenterStart)
+                    Text(
+                        text = "2",
+                        style = MaterialTheme.typography.titleLarge,
+                        color = MaterialTheme.colorScheme.onBackground
                     )
 
+                    // Thinner slider without dots
+                    Slider(
+                        value = workoutsPerWeek.toFloat(),
+                        onValueChange = { onWorkoutsPerWeek(it.toInt()) },
+                        valueRange = 2f..7f,
+                        steps = 0, // Remove step dots
+                        modifier = Modifier
+                            .weight(1f)
+                            .padding(horizontal = 8.dp)
+                            .height(16.dp), // Reduce height for thinner slider
+                        colors = SliderDefaults.colors(
+                            thumbColor = MaterialTheme.colorScheme.primary,
+                            activeTrackColor = MaterialTheme.colorScheme.primary,
+                            inactiveTrackColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(
+                                alpha = 0.3f
+                            )
+                        )
+                    )
 
                     Text(
-                        text = "Workout Preferences",
-                        style = MaterialTheme.typography.headlineMedium,
-                        color = MaterialTheme.colorScheme.onBackground,
-                        modifier = Modifier
-                            .align(Alignment.Center)
-                            .padding(start = 30.dp)
+                        text = "7",
+                        style = MaterialTheme.typography.titleLarge,
+                        color = MaterialTheme.colorScheme.onBackground
                     )
                 }
 
                 Text(
-                    text = "Set your workout preferences",
+                    text = "$workoutsPerWeek days",
                     style = MaterialTheme.typography.bodyLarge,
                     color = MaterialTheme.colorScheme.onBackground,
                     textAlign = TextAlign.Center,
-                    modifier = Modifier.padding(top = 16.dp, bottom = 24.dp)
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
+
+            // Workout duration slider
+            Column(modifier = Modifier.fillMaxWidth()) {
+                Text(
+                    text = "Workout duration",
+                    style = MaterialTheme.typography.titleLarge,
+                    color = MaterialTheme.colorScheme.onBackground
                 )
 
-                LinearProgressIndicator(
-                    progress = { 1.0f }, // 5 of 5 steps complete
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(4.dp),
-                    color = MaterialTheme.colorScheme.primary,
-                    trackColor = MaterialTheme.colorScheme.onSurfaceVariant
-                )
+                Spacer(modifier = Modifier.height(16.dp))
 
-                Box(
+                Row(
                     modifier = Modifier.fillMaxWidth(),
-                    contentAlignment = Alignment.CenterEnd
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = "Step 8 of 8",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onBackground,
-                        modifier = Modifier.padding(top = 4.dp)
-                    )
-                }
-            }
-
-            // Workout preferences content
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 24.dp),
-                verticalArrangement = Arrangement.spacedBy(32.dp)
-            ) {
-                // Workouts per week slider
-                Column(modifier = Modifier.fillMaxWidth()) {
-                    Text(
-                        text = "Workouts per week",
+                        text = "15m",
                         style = MaterialTheme.typography.titleLarge,
                         color = MaterialTheme.colorScheme.onBackground
                     )
 
-                    Spacer(modifier = Modifier.height(16.dp))
-
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(
-                            text = "2",
-                            style = MaterialTheme.typography.titleLarge,
-                            color = MaterialTheme.colorScheme.onBackground
-                        )
-
-                        // Thinner slider without dots
-                        Slider(
-                            value = workoutsPerWeek.toFloat(),
-                            onValueChange = { workoutsPerWeek = it.toInt() },
-                            valueRange = 2f..7f,
-                            steps = 0, // Remove step dots
-                            modifier = Modifier
-                                .weight(1f)
-                                .padding(horizontal = 8.dp)
-                                .height(16.dp), // Reduce height for thinner slider
-                            colors = SliderDefaults.colors(
-                                thumbColor = MaterialTheme.colorScheme.primary,
-                                activeTrackColor = MaterialTheme.colorScheme.primary,
-                                inactiveTrackColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.3f)
+                    // Thinner slider without dots
+                    Slider(
+                        value = workoutDurationMinutes.toFloat(),
+                        onValueChange = { onWorkoutDurationMinutes(it.toInt()) },
+                        valueRange = 15f..90f,
+                        steps = 0, // Remove step dots
+                        modifier = Modifier
+                            .weight(1f)
+                            .padding(horizontal = 8.dp)
+                            .height(16.dp), // Reduce height for thinner slider
+                        colors = SliderDefaults.colors(
+                            thumbColor = MaterialTheme.colorScheme.primary,
+                            activeTrackColor = MaterialTheme.colorScheme.primary,
+                            inactiveTrackColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(
+                                alpha = 0.3f
                             )
                         )
-
-                        Text(
-                            text = "7",
-                            style = MaterialTheme.typography.titleLarge,
-                            color = MaterialTheme.colorScheme.onBackground
-                        )
-                    }
-
-                    Text(
-                        text = "$workoutsPerWeek days",
-                        style = MaterialTheme.typography.bodyLarge,
-                        color = MaterialTheme.colorScheme.onBackground,
-                        textAlign = TextAlign.Center,
-                        modifier = Modifier.fillMaxWidth()
                     )
-                }
 
-                // Workout duration slider
-                Column(modifier = Modifier.fillMaxWidth()) {
                     Text(
-                        text = "Workout duration",
+                        text = "90m",
                         style = MaterialTheme.typography.titleLarge,
                         color = MaterialTheme.colorScheme.onBackground
                     )
-
-                    Spacer(modifier = Modifier.height(16.dp))
-
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(
-                            text = "15m",
-                            style = MaterialTheme.typography.titleLarge,
-                            color = MaterialTheme.colorScheme.onBackground
-                        )
-
-                        // Thinner slider without dots
-                        Slider(
-                            value = workoutDurationMinutes.toFloat(),
-                            onValueChange = { workoutDurationMinutes = it.toInt() },
-                            valueRange = 15f..90f,
-                            steps = 0, // Remove step dots
-                            modifier = Modifier
-                                .weight(1f)
-                                .padding(horizontal = 8.dp)
-                                .height(16.dp), // Reduce height for thinner slider
-                            colors = SliderDefaults.colors(
-                                thumbColor = MaterialTheme.colorScheme.primary,
-                                activeTrackColor = MaterialTheme.colorScheme.primary,
-                                inactiveTrackColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.3f)
-                            )
-                        )
-
-                        Text(
-                            text = "90m",
-                            style = MaterialTheme.typography.titleLarge,
-                            color = MaterialTheme.colorScheme.onBackground
-                        )
-                    }
-
-                    Text(
-                        text = "$workoutDurationMinutes minutes",
-                        style = MaterialTheme.typography.bodyLarge,
-                        color = MaterialTheme.colorScheme.onBackground,
-                        textAlign = TextAlign.Center,
-                        modifier = Modifier.fillMaxWidth()
-                    )
                 }
 
-                // Preferred workout time with clock picker
-                Column(modifier = Modifier.fillMaxWidth()) {
-                    Text(
-                        text = "Preferred workout time",
-                        style = MaterialTheme.typography.titleLarge,
-                        color = MaterialTheme.colorScheme.onBackground
-                    )
-
-                    Spacer(modifier = Modifier.height(16.dp))
-
-                    // Time picker field
-                    TimePickerField(
-                        timeText = startTimeFormatted,
-                        onClick = { showTimePicker = true }
-                    )
-
-                    // Display selected time range
-                    Text(
-                        text = "Workout time: $startTimeFormatted - $endTimeFormatted",
-                        style = MaterialTheme.typography.bodyLarge,
-                        color = MaterialTheme.colorScheme.onBackground,
-                        textAlign = TextAlign.Center,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(top = 16.dp)
-                    )
-
-                    Text(
-                        text = "We will notify you at this time",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f),
-                        textAlign = TextAlign.Center,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(top = 4.dp)
-                    )
-                }
+                Text(
+                    text = "$workoutDurationMinutes minutes",
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.onBackground,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.fillMaxWidth()
+                )
             }
 
-            // Create plan button
-            AnimatedCustomButton(
-                onClick = onCreatePlanClick,
-                text = "Create My Plan",
-                backgroundColor = MaterialTheme.colorScheme.primary,
-                textColor = MaterialTheme.colorScheme.onPrimary,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 16.dp)
-            )
+            // Preferred workout time with clock picker
+            Column(modifier = Modifier.fillMaxWidth()) {
+                Text(
+                    text = "Preferred workout time",
+                    style = MaterialTheme.typography.titleLarge,
+                    color = MaterialTheme.colorScheme.onBackground
+                )
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // Time picker field
+                TimePickerField(
+                    timeText = startTimeFormatted,
+                    onClick = { onShowTimePicker(true) }
+                )
+
+                // Display selected time range
+                Text(
+                    text = "Workout time: $startTimeFormatted - $endTimeFormatted",
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.onBackground,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 16.dp)
+                )
+
+                Text(
+                    text = "We will notify you at this time",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f),
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 4.dp)
+                )
+            }
         }
 
-        // Time picker dialog
-        if (showTimePicker) {
-            TimePickerDialog(
-                initialHour = preferredHour,
-                initialMinute = preferredMinute,
-                initialIsAm = isAm,
-                onTimeSelected = { hour, minute, am ->
-                    preferredHour = hour
-                    preferredMinute = minute
-                    isAm = am
-                    showTimePicker = false
-                },
-                onDismiss = { showTimePicker = false }
-            )
-        }
+        // Create plan button
+        AnimatedCustomButton(
+            onClick = onCreatePlanClick,
+            text = "Create My Plan",
+            backgroundColor = MaterialTheme.colorScheme.primary,
+            textColor = MaterialTheme.colorScheme.onPrimary,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 16.dp)
+        )
+    }
+
+
+// Time picker dialog
+    if (showTimePicker) {
+        TimePickerDialog(
+            initialHour = preferredHour,
+            initialMinute = preferredMinute,
+            initialIsAm = isAm,
+            onTimeSelected = { hour, minute, am ->
+                onPreferredHour(hour)
+                onPreferredMinute(minute)
+                onIsAm(am)
+                onShowTimePicker(false)
+            },
+            onDismiss = { onShowTimePicker(false) }
+        )
     }
 }
+
+@Composable
+private fun PreferencesPortraitLayout(
+    heightSizeClass: WindowHeightSizeClass,
+    onBackClick: () -> Unit,
+    scrollState: ScrollState,
+    showTimePicker: Boolean,
+    workoutsPerWeek: Int,
+    onWorkoutsPerWeek: (Int) -> Unit,
+    workoutDurationMinutes: Int,
+    onWorkoutDurationMinutes: (Int) -> Unit,
+    startTimeFormatted: String,
+    endTimeFormatted: String,
+    onShowTimePicker: (Boolean) -> Unit,
+    onCreatePlanClick: () -> Unit,
+    preferredHour: Int,
+    preferredMinute: Int,
+    isAm: Boolean,
+    onPreferredHour: (Int) -> Unit,
+    onPreferredMinute: (Int) -> Unit,
+    onIsAm: (Boolean) -> Unit,
+    ) {
+    val verticalSpacing = when (heightSizeClass) {
+        WindowHeightSizeClass.Expanded -> 16.dp
+        WindowHeightSizeClass.Medium -> 12.dp
+        else -> 8.dp
+    }
+    Column(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 16.dp)
+        ) {
+            GoBackButton(
+                onClick = onBackClick,
+                modifier = Modifier.align(Alignment.CenterStart)
+            )
+
+
+            Text(
+                text = "Workout Preferences",
+                style = MaterialTheme.typography.headlineMedium,
+                color = MaterialTheme.colorScheme.onBackground,
+                modifier = Modifier
+                    .align(Alignment.Center)
+                    .padding(start = 30.dp)
+            )
+        }
+
+        Text(
+            text = "Set your workout preferences",
+            style = MaterialTheme.typography.bodyLarge,
+            color = MaterialTheme.colorScheme.onBackground,
+            textAlign = TextAlign.Center,
+            modifier = Modifier.padding(top = 16.dp, bottom = 24.dp)
+        )
+
+        LinearProgressIndicator(
+            progress = { 1.0f }, // 5 of 5 steps complete
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(4.dp),
+            color = MaterialTheme.colorScheme.primary,
+            trackColor = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+
+        Box(
+            modifier = Modifier.fillMaxWidth(),
+            contentAlignment = Alignment.CenterEnd
+        ) {
+            Text(
+                text = "Step 8 of 8",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onBackground,
+                modifier = Modifier.padding(top = 4.dp)
+            )
+        }
+
+
+        // Workout preferences content
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 24.dp),
+            verticalArrangement = Arrangement.spacedBy(32.dp)
+        ) {
+            // Workouts per week slider
+            Column(modifier = Modifier.fillMaxWidth()) {
+                Text(
+                    text = "Workouts per week",
+                    style = MaterialTheme.typography.titleLarge,
+                    color = MaterialTheme.colorScheme.onBackground
+                )
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "2",
+                        style = MaterialTheme.typography.titleLarge,
+                        color = MaterialTheme.colorScheme.onBackground
+                    )
+
+                    // Thinner slider without dots
+                    Slider(
+                        value = workoutsPerWeek.toFloat(),
+                        onValueChange = { onWorkoutsPerWeek(it.toInt()) },
+                        valueRange = 2f..7f,
+                        steps = 0, // Remove step dots
+                        modifier = Modifier
+                            .weight(1f)
+                            .padding(horizontal = 8.dp)
+                            .height(16.dp), // Reduce height for thinner slider
+                        colors = SliderDefaults.colors(
+                            thumbColor = MaterialTheme.colorScheme.primary,
+                            activeTrackColor = MaterialTheme.colorScheme.primary,
+                            inactiveTrackColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(
+                                alpha = 0.3f
+                            )
+                        )
+                    )
+
+                    Text(
+                        text = "7",
+                        style = MaterialTheme.typography.titleLarge,
+                        color = MaterialTheme.colorScheme.onBackground
+                    )
+                }
+
+                Text(
+                    text = "$workoutsPerWeek days",
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.onBackground,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
+
+            // Workout duration slider
+            Column(modifier = Modifier.fillMaxWidth()) {
+                Text(
+                    text = "Workout duration",
+                    style = MaterialTheme.typography.titleLarge,
+                    color = MaterialTheme.colorScheme.onBackground
+                )
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "15m",
+                        style = MaterialTheme.typography.titleLarge,
+                        color = MaterialTheme.colorScheme.onBackground
+                    )
+
+                    // Thinner slider without dots
+                    Slider(
+                        value = workoutDurationMinutes.toFloat(),
+                        onValueChange = { onWorkoutDurationMinutes(it.toInt()) },
+                        valueRange = 15f..90f,
+                        steps = 0, // Remove step dots
+                        modifier = Modifier
+                            .weight(1f)
+                            .padding(horizontal = 8.dp)
+                            .height(16.dp), // Reduce height for thinner slider
+                        colors = SliderDefaults.colors(
+                            thumbColor = MaterialTheme.colorScheme.primary,
+                            activeTrackColor = MaterialTheme.colorScheme.primary,
+                            inactiveTrackColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(
+                                alpha = 0.3f
+                            )
+                        )
+                    )
+
+                    Text(
+                        text = "90m",
+                        style = MaterialTheme.typography.titleLarge,
+                        color = MaterialTheme.colorScheme.onBackground
+                    )
+                }
+
+                Text(
+                    text = "$workoutDurationMinutes minutes",
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.onBackground,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
+
+            // Preferred workout time with clock picker
+            Column(modifier = Modifier.fillMaxWidth()) {
+                Text(
+                    text = "Preferred workout time",
+                    style = MaterialTheme.typography.titleLarge,
+                    color = MaterialTheme.colorScheme.onBackground
+                )
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // Time picker field
+                TimePickerField(
+                    timeText = startTimeFormatted,
+                    onClick = { onShowTimePicker(true) }
+                )
+
+                // Display selected time range
+                Text(
+                    text = "Workout time: $startTimeFormatted - $endTimeFormatted",
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.onBackground,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 16.dp)
+                )
+
+                Text(
+                    text = "We will notify you at this time",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f),
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 4.dp)
+                )
+            }
+        }
+
+        // Create plan button
+        AnimatedCustomButton(
+            onClick = onCreatePlanClick,
+            text = "Create My Plan",
+            backgroundColor = MaterialTheme.colorScheme.primary,
+            textColor = MaterialTheme.colorScheme.onPrimary,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 16.dp)
+        )
+    }
+
+// Time picker dialog
+    if (showTimePicker) {
+        TimePickerDialog(
+            initialHour = preferredHour,
+            initialMinute = preferredMinute,
+            initialIsAm = isAm,
+            onTimeSelected = { hour, minute, am ->
+                onPreferredHour(hour)
+                onPreferredMinute(minute)
+                onIsAm(am)
+                onShowTimePicker(false)
+            },
+            onDismiss = { onShowTimePicker(false) }
+        )
+    }
+}
+
+
+
+
+
+
+
 
 @Composable
 fun TimePickerField(

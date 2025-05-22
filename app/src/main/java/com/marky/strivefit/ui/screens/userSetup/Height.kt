@@ -1,31 +1,75 @@
 package com.marky.strivefit.ui.screens.userSetup
 
+import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
+import androidx.compose.material3.windowsizeclass.WindowHeightSizeClass
+import androidx.compose.material3.windowsizeclass.WindowSizeClass
+import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.marky.strivefit.ui.components.AnimatedCustomButton
 import com.marky.strivefit.ui.components.GoBackButton
+import com.marky.strivefit.ui.utilities.calculateWindowHeightSizeClass
+import com.marky.strivefit.ui.utilities.calculateWindowWidthSizeClass
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import kotlin.math.floor
 import kotlin.math.roundToInt
 
 @Composable
 fun HeightInputScreen(
+    windowSizeClass: WindowSizeClass? = null,
     onBackClick: () -> Unit = {},
     onContinueClick: () -> Unit = {}
 ) {
+
+    val configuration = LocalConfiguration.current
+
+    val screenWidth = configuration.screenWidthDp.dp
+    val screenHeight = configuration.screenHeightDp.dp
+
+    val widthSizeClass by remember(windowSizeClass, screenWidth) {
+        mutableStateOf(
+            windowSizeClass?.widthSizeClass ?: calculateWindowWidthSizeClass(screenWidth)
+        )
+    }
+
+    val heightSizeClass by remember(windowSizeClass, screenHeight) {
+        mutableStateOf(
+            windowSizeClass?.heightSizeClass ?: calculateWindowHeightSizeClass(
+                screenHeight
+            )
+        )
+    }
+
+    val aspectRatio = screenWidth / screenHeight
+    val isLandscape = aspectRatio > 1.2f && widthSizeClass != WindowWidthSizeClass.Compact
+
+    val paddingStart = when (isLandscape) {
+        true -> 18.dp
+        false -> 5.dp
+    }
+    val scope = rememberCoroutineScope()
+    var isVisible by remember { mutableStateOf(false) }
+
+    val scrollState = rememberScrollState()
+
     // States for height values - using empty string as default
     var useCentimeters by remember { mutableStateOf(true) }
     var centimeterValue by remember { mutableStateOf("") }
@@ -84,71 +128,214 @@ fun HeightInputScreen(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.SpaceBetween
         ) {
-            Column(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 16.dp)
-                ) {
-                    GoBackButton(
-                        onClick = onBackClick,
-                        modifier = Modifier.align(Alignment.CenterStart)
-                    )
-
-                    Text(
-                        text = "Your Height",
-                        style = MaterialTheme.typography.headlineMedium,
-                        color = MaterialTheme.colorScheme.onBackground,
-                        modifier = Modifier.align(Alignment.Center)
+            when {
+                isLandscape -> {
+                    HeightLandscapeLayout(
+                        heightSizeClass = heightSizeClass,
+                        onBackClick = {
+                            scope.launch {
+                                isVisible = false
+                                delay(300)
+                                onBackClick()
+                            }
+                        },
+                        onContinueClick = {
+                            scope.launch {
+                                isVisible = false
+                                delay(300)
+                                onContinueClick()
+                            }
+                        },
+                        scrollState = scrollState,
+                        useCentimeters = useCentimeters,
+                        centimeterValue = centimeterValue,
+                        onCentimeterValue = { centimeterValue = it },
+                        cmToFeetInches = { cm -> cmToFeetInches(cm) },
+                        feetValue = feetValue,
+                        onFeetValueChange = { feetValue = it },
+                        inchesValue = inchesValue,
+                        onInchesValueChange = { inchesValue = it },
+                        feetInchesToCm = { feet, inches -> feetInchesToCm(feet, inches) },
+                        onUseCentimeters = { useCentimeters = it }
                     )
                 }
-
-                Spacer(modifier = Modifier.height(10.dp))
-
-                LinearProgressIndicator(
-                    progress = { 0.25f },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(4.dp),
-                    color = MaterialTheme.colorScheme.primary,
-                    trackColor = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-
-                Box(
-                    modifier = Modifier.fillMaxWidth(),
-                    contentAlignment = Alignment.CenterEnd
-                ) {
-                    Text(
-                        text = "Step 2 of 8",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onBackground,
-                        modifier = Modifier.padding(top = 4.dp)
+                else -> {
+                    HeightPortraitLayout(
+                        heightSizeClass = heightSizeClass,
+                        onBackClick = {
+                            scope.launch {
+                                isVisible = false
+                                delay(300)
+                                onBackClick()
+                            }
+                        },
+                        onContinueClick = {
+                            scope.launch {
+                                isVisible = false
+                                delay(300)
+                                onContinueClick()
+                            }
+                        },
+                        scrollState = scrollState,
+                        useCentimeters = useCentimeters,
+                        centimeterValue = centimeterValue,
+                        onCentimeterValue = { centimeterValue = it },
+                        cmToFeetInches = { cm -> cmToFeetInches(cm) },
+                        feetValue = feetValue,
+                        onFeetValueChange = { feetValue = it },
+                        inchesValue = inchesValue,
+                        onInchesValueChange = { inchesValue = it },
+                        feetInchesToCm = { feet, inches -> feetInchesToCm(feet, inches) },
+                        onUseCentimeters = { useCentimeters = it }
                     )
                 }
             }
 
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                if (useCentimeters) {
-                    // Centimeter input with placeholder
+        }
+    }
+}
+
+
+@Composable
+private fun HeightLandscapeLayout(
+    heightSizeClass: WindowHeightSizeClass,
+    onBackClick: () -> Unit,
+    onContinueClick: () -> Unit,
+    scrollState: ScrollState,
+    useCentimeters: Boolean,
+    centimeterValue:String,
+    onCentimeterValue: (String) -> Unit,
+    cmToFeetInches: (Float) -> Unit,
+    feetValue: String,
+    onFeetValueChange: (String) -> Unit,
+    inchesValue: String,
+    onInchesValueChange: (String) -> Unit,
+    feetInchesToCm: (Int, Int) -> Unit,
+    onUseCentimeters: (Boolean) -> Unit,
+
+
+
+    ) {
+    val verticalSpacing = when (heightSizeClass) {
+        WindowHeightSizeClass.Expanded -> 12.dp
+        WindowHeightSizeClass.Medium -> 8.dp
+        else -> 6.dp
+    }
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .verticalScroll(scrollState)
+            .padding(horizontal = 80.dp)
+    ) {
+
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = verticalSpacing)
+        ) {
+            GoBackButton(
+                onClick = onBackClick,
+                modifier = Modifier.align(Alignment.CenterStart)
+            )
+
+            Text(
+                text = "Your Height",
+                style = MaterialTheme.typography.headlineMedium,
+                color = MaterialTheme.colorScheme.onBackground,
+                modifier = Modifier.align(Alignment.Center)
+            )
+        }
+
+        Spacer(modifier = Modifier.height(10.dp))
+
+        LinearProgressIndicator(
+            progress = { 0.25f },
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(4.dp),
+            color = MaterialTheme.colorScheme.primary,
+            trackColor = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+
+        Box(
+            modifier = Modifier.fillMaxWidth(),
+            contentAlignment = Alignment.CenterEnd
+        ) {
+            Text(
+                text = "Step 2 of 8",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onBackground,
+                modifier = Modifier.padding(top = 4.dp)
+            )
+        }
+
+
+        Column(
+            verticalArrangement = Arrangement.spacedBy(verticalSpacing),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            if (useCentimeters) {
+                // Centimeter input with placeholder
+                OutlinedTextField(
+                    value = centimeterValue,
+                    onValueChange = { newValue ->
+                        if (newValue.isEmpty() || newValue.all { it.isDigit() }) {
+                            onCentimeterValue(newValue)
+
+                            // Update feet and inches when cm changes
+                            val cm = newValue.toFloatOrNull() ?: 0f
+                            if (cm > 0) {
+                                cmToFeetInches(cm)
+                            } else {
+                                onFeetValueChange("")
+                                onInchesValueChange("")
+                            }
+                        }
+                    },
+                    textStyle = MaterialTheme.typography.displayLarge.copy(
+                        textAlign = TextAlign.Center,
+                    ),
+                    placeholder = {
+                        Text(
+                            text = "0",
+                            style = MaterialTheme.typography.displayLarge.copy(
+                                textAlign = TextAlign.Center,
+                                color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f)
+                            ),
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                    },
+                    keyboardOptions = KeyboardOptions.Default.copy(
+                        keyboardType = KeyboardType.Number
+                    ),
+                    singleLine = true,
+                    colors = TextFieldDefaults.colors(
+                        focusedContainerColor = Color.Transparent,
+                        unfocusedContainerColor = Color.Transparent,
+                        disabledContainerColor = Color.Transparent,
+                        focusedIndicatorColor = Color.Transparent,
+                        unfocusedIndicatorColor = Color.Transparent,
+                        cursorColor = MaterialTheme.colorScheme.primary
+                    ),
+                    modifier = Modifier.width(200.dp)
+                )
+            } else {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.Center
+                ) {
+                    // Feet input with placeholder
                     OutlinedTextField(
-                        value = centimeterValue,
+                        value = feetValue,
                         onValueChange = { newValue ->
                             if (newValue.isEmpty() || newValue.all { it.isDigit() }) {
-                                centimeterValue = newValue
+                                onFeetValueChange(newValue)
 
-                                // Update feet and inches when cm changes
-                                val cm = newValue.toFloatOrNull() ?: 0f
-                                if (cm > 0) {
-                                    cmToFeetInches(cm)
-                                } else {
-                                    feetValue = ""
-                                    inchesValue = ""
-                                }
+                                // Update cm when feet changes
+                                val feet = newValue.toIntOrNull() ?: 0
+                                val inches = inchesValue.toIntOrNull() ?: 0
+                                feetInchesToCm(feet, inches)
                             }
                         },
                         textStyle = MaterialTheme.typography.displayLarge.copy(
@@ -176,189 +363,450 @@ fun HeightInputScreen(
                             unfocusedIndicatorColor = Color.Transparent,
                             cursorColor = MaterialTheme.colorScheme.primary
                         ),
-                        modifier = Modifier.width(200.dp)
+                        modifier = Modifier.width(100.dp)
                     )
-                } else {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.Center
-                    ) {
-                        // Feet input with placeholder
-                        OutlinedTextField(
-                            value = feetValue,
-                            onValueChange = { newValue ->
-                                if (newValue.isEmpty() || newValue.all { it.isDigit() }) {
-                                    feetValue = newValue
 
-                                    // Update cm when feet changes
-                                    val feet = newValue.toIntOrNull() ?: 0
-                                    val inches = inchesValue.toIntOrNull() ?: 0
-                                    feetInchesToCm(feet, inches)
-                                }
-                            },
-                            textStyle = MaterialTheme.typography.displayLarge.copy(
-                                textAlign = TextAlign.Center,
-                            ),
-                            placeholder = {
-                                Text(
-                                    text = "0",
-                                    style = MaterialTheme.typography.displayLarge.copy(
-                                        textAlign = TextAlign.Center,
-                                        color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f)
-                                    ),
-                                    modifier = Modifier.fillMaxWidth()
-                                )
-                            },
-                            keyboardOptions = KeyboardOptions.Default.copy(
-                                keyboardType = KeyboardType.Number
-                            ),
-                            singleLine = true,
-                            colors = TextFieldDefaults.colors(
-                                focusedContainerColor = Color.Transparent,
-                                unfocusedContainerColor = Color.Transparent,
-                                disabledContainerColor = Color.Transparent,
-                                focusedIndicatorColor = Color.Transparent,
-                                unfocusedIndicatorColor = Color.Transparent,
-                                cursorColor = MaterialTheme.colorScheme.primary
-                            ),
-                            modifier = Modifier.width(100.dp)
-                        )
+                    Text(
+                        text = "ft",
+                        style = MaterialTheme.typography.titleLarge,
+                        color = MaterialTheme.colorScheme.onBackground,
+                        modifier = Modifier.padding(horizontal = 8.dp)
+                    )
 
-                        Text(
-                            text = "ft",
-                            style = MaterialTheme.typography.titleLarge,
-                            color = MaterialTheme.colorScheme.onBackground,
-                            modifier = Modifier.padding(horizontal = 8.dp)
-                        )
+                    // Inches input with placeholder
+                    OutlinedTextField(
+                        value = inchesValue,
+                        onValueChange = { newValue ->
+                            if (newValue.isEmpty() || newValue.all { it.isDigit() }) {
+                                onInchesValueChange(newValue)
 
-                        // Inches input with placeholder
-                        OutlinedTextField(
-                            value = inchesValue,
-                            onValueChange = { newValue ->
-                                if (newValue.isEmpty() || newValue.all { it.isDigit() }) {
-                                    inchesValue = newValue
-
-                                    // Update cm when inches changes
-                                    val feet = feetValue.toIntOrNull() ?: 0
-                                    val inches = newValue.toIntOrNull() ?: 0
-                                    feetInchesToCm(feet, inches)
-                                }
-                            },
-                            textStyle = MaterialTheme.typography.displayLarge.copy(
-                                textAlign = TextAlign.Center,
-                            ),
-                            placeholder = {
-                                Text(
-                                    text = "0",
-                                    style = MaterialTheme.typography.displayLarge.copy(
-                                        textAlign = TextAlign.Center,
-                                        color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f)
-                                    ),
-                                    modifier = Modifier.fillMaxWidth()
-                                )
-                            },
-                            keyboardOptions = KeyboardOptions.Default.copy(
-                                keyboardType = KeyboardType.Number
-                            ),
-                            singleLine = true,
-                            colors = TextFieldDefaults.colors(
-                                focusedContainerColor = Color.Transparent,
-                                unfocusedContainerColor = Color.Transparent,
-                                disabledContainerColor = Color.Transparent,
-                                focusedIndicatorColor = Color.Transparent,
-                                unfocusedIndicatorColor = Color.Transparent,
-                                cursorColor = MaterialTheme.colorScheme.primary
-                            ),
-                            modifier = Modifier.width(100.dp)
-                        )
-
-                        Text(
-                            text = "in",
-                            style = MaterialTheme.typography.titleLarge,
-                            color = MaterialTheme.colorScheme.onBackground,
-                            modifier = Modifier.padding(horizontal = 8.dp)
-                        )
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(24.dp))
-
-                // Custom segmented toggle button
-                Box(
-                    modifier = Modifier
-                        .width(240.dp)
-                        .height(48.dp)
-                        .clip(RoundedCornerShape(24.dp))
-                        .background(MaterialTheme.colorScheme.surfaceVariant)
-                ) {
-                    Row(
-                        modifier = Modifier.fillMaxSize()
-                    ) {
-                        // CM option
-                        Box(
-                            modifier = Modifier
-                                .weight(1f)
-                                .fillMaxHeight()
-                                .clip(RoundedCornerShape(24.dp))
-                                .background(
-                                    if (useCentimeters) MaterialTheme.colorScheme.primary
-                                    else Color.Transparent
-                                )
-                                .clickable(
-                                    interactionSource = remember { MutableInteractionSource() },
-                                    indication = null
-                                ) { useCentimeters = true },
-                            contentAlignment = Alignment.Center
-                        ) {
+                                // Update cm when inches changes
+                                val feet = feetValue.toIntOrNull() ?: 0
+                                val inches = newValue.toIntOrNull() ?: 0
+                                feetInchesToCm(feet, inches)
+                            }
+                        },
+                        textStyle = MaterialTheme.typography.displayLarge.copy(
+                            textAlign = TextAlign.Center,
+                        ),
+                        placeholder = {
                             Text(
-                                text = "cm",
-                                style = MaterialTheme.typography.bodyLarge,
-                                color = if (useCentimeters)
-                                    MaterialTheme.colorScheme.onPrimary
-                                else
-                                    MaterialTheme.colorScheme.onSurfaceVariant
+                                text = "0",
+                                style = MaterialTheme.typography.displayLarge.copy(
+                                    textAlign = TextAlign.Center,
+                                    color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f)
+                                ),
+                                modifier = Modifier.fillMaxWidth()
                             )
-                        }
+                        },
+                        keyboardOptions = KeyboardOptions.Default.copy(
+                            keyboardType = KeyboardType.Number
+                        ),
+                        singleLine = true,
+                        colors = TextFieldDefaults.colors(
+                            focusedContainerColor = Color.Transparent,
+                            unfocusedContainerColor = Color.Transparent,
+                            disabledContainerColor = Color.Transparent,
+                            focusedIndicatorColor = Color.Transparent,
+                            unfocusedIndicatorColor = Color.Transparent,
+                            cursorColor = MaterialTheme.colorScheme.primary
+                        ),
+                        modifier = Modifier.width(100.dp)
+                    )
 
-                        // Ft & In option
-                        Box(
-                            modifier = Modifier
-                                .weight(1f)
-                                .fillMaxHeight()
-                                .clip(RoundedCornerShape(24.dp))
-                                .background(
-                                    if (!useCentimeters) MaterialTheme.colorScheme.primary
-                                    else Color.Transparent
-                                )
-                                .clickable(
-                                    interactionSource = remember { MutableInteractionSource() },
-                                    indication = null
-                                ) { useCentimeters = false },
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Text(
-                                text = "ft & in",
-                                style = MaterialTheme.typography.bodyLarge,
-                                color = if (!useCentimeters)
-                                    MaterialTheme.colorScheme.onPrimary
-                                else
-                                    MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        }
-                    }
+                    Text(
+                        text = "in",
+                        style = MaterialTheme.typography.titleLarge,
+                        color = MaterialTheme.colorScheme.onBackground,
+                        modifier = Modifier.padding(horizontal = 8.dp)
+                    )
                 }
             }
 
-            AnimatedCustomButton(
-                onClick = onContinueClick,
-                text = "Continue",
-                backgroundColor = MaterialTheme.colorScheme.primary,
-                textColor = MaterialTheme.colorScheme.onPrimary,
-                modifier = Modifier.fillMaxWidth()
+            Spacer(modifier = Modifier.height(1.dp))
+
+            // Custom segmented toggle button
+            Box(
+                modifier = Modifier
+                    .width(240.dp)
+                    .height(48.dp)
+                    .clip(RoundedCornerShape(24.dp))
+                    .background(MaterialTheme.colorScheme.surfaceVariant)
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxSize()
+                ) {
+                    // CM option
+                    Box(
+                        modifier = Modifier
+                            .weight(1f)
+                            .fillMaxHeight()
+                            .clip(RoundedCornerShape(24.dp))
+                            .background(
+                                if (useCentimeters) MaterialTheme.colorScheme.primary
+                                else Color.Transparent
+                            )
+                            .clickable(
+                                interactionSource = remember { MutableInteractionSource() },
+                                indication = null
+                            ) { onUseCentimeters(true) },
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = "cm",
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = if (useCentimeters)
+                                MaterialTheme.colorScheme.onPrimary
+                            else
+                                MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+
+                    // Ft & In option
+                    Box(
+                        modifier = Modifier
+                            .weight(1f)
+                            .fillMaxHeight()
+                            .clip(RoundedCornerShape(24.dp))
+                            .background(
+                                if (!useCentimeters) MaterialTheme.colorScheme.primary
+                                else Color.Transparent
+                            )
+                            .clickable(
+                                interactionSource = remember { MutableInteractionSource() },
+                                indication = null
+                            ) { onUseCentimeters(false) },
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = "ft & in",
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = if (!useCentimeters)
+                                MaterialTheme.colorScheme.onPrimary
+                            else
+                                MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+            }
+        }
+
+
+        Spacer(modifier = Modifier.height(verticalSpacing * 2f))
+
+        AnimatedCustomButton(
+            onClick = onContinueClick,
+            text = "Continue",
+            backgroundColor = MaterialTheme.colorScheme.primary,
+            textColor = MaterialTheme.colorScheme.onPrimary,
+            modifier = Modifier.fillMaxWidth()
+        )
+    }
+}
+
+
+
+@Composable
+private fun HeightPortraitLayout(
+    heightSizeClass: WindowHeightSizeClass,
+    onBackClick: () -> Unit,
+    onContinueClick: () -> Unit,
+    scrollState: ScrollState,
+    useCentimeters: Boolean,
+    centimeterValue:String,
+    onCentimeterValue: (String) -> Unit,
+    cmToFeetInches: (Float) -> Unit,
+    feetValue: String,
+    onFeetValueChange: (String) -> Unit,
+    inchesValue: String,
+    onInchesValueChange: (String) -> Unit,
+    feetInchesToCm: (Int, Int) -> Unit,
+    onUseCentimeters: (Boolean) -> Unit,
+
+
+
+    ) {
+    val verticalSpacing = when (heightSizeClass) {
+        WindowHeightSizeClass.Expanded -> 16.dp
+        WindowHeightSizeClass.Medium -> 12.dp
+        else -> 8.dp
+    }
+
+    Column(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 16.dp)
+        ) {
+            GoBackButton(
+                onClick = onBackClick,
+                modifier = Modifier.align(Alignment.CenterStart)
+            )
+
+            Text(
+                text = "Your Height",
+                style = MaterialTheme.typography.headlineMedium,
+                color = MaterialTheme.colorScheme.onBackground,
+                modifier = Modifier.align(Alignment.Center)
+            )
+        }
+
+        Spacer(modifier = Modifier.height(10.dp))
+
+        LinearProgressIndicator(
+            progress = { 0.25f },
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(4.dp),
+            color = MaterialTheme.colorScheme.primary,
+            trackColor = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+
+        Box(
+            modifier = Modifier.fillMaxWidth(),
+            contentAlignment = Alignment.CenterEnd
+        ) {
+            Text(
+                text = "Step 2 of 8",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onBackground,
+                modifier = Modifier.padding(top = 4.dp)
             )
         }
     }
+
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        if (useCentimeters) {
+            // Centimeter input with placeholder
+            OutlinedTextField(
+                value = centimeterValue,
+                onValueChange = { newValue ->
+                    if (newValue.isEmpty() || newValue.all { it.isDigit() }) {
+                        onCentimeterValue(newValue)
+
+                        // Update feet and inches when cm changes
+                        val cm = newValue.toFloatOrNull() ?: 0f
+                        if (cm > 0) {
+                            cmToFeetInches(cm)
+                        } else {
+                            onFeetValueChange("")
+                            onInchesValueChange("")
+                        }
+                    }
+                },
+                textStyle = MaterialTheme.typography.displayLarge.copy(
+                    textAlign = TextAlign.Center,
+                ),
+                placeholder = {
+                    Text(
+                        text = "0",
+                        style = MaterialTheme.typography.displayLarge.copy(
+                            textAlign = TextAlign.Center,
+                            color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f)
+                        ),
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                },
+                keyboardOptions = KeyboardOptions.Default.copy(
+                    keyboardType = KeyboardType.Number
+                ),
+                singleLine = true,
+                colors = TextFieldDefaults.colors(
+                    focusedContainerColor = Color.Transparent,
+                    unfocusedContainerColor = Color.Transparent,
+                    disabledContainerColor = Color.Transparent,
+                    focusedIndicatorColor = Color.Transparent,
+                    unfocusedIndicatorColor = Color.Transparent,
+                    cursorColor = MaterialTheme.colorScheme.primary
+                ),
+                modifier = Modifier.width(200.dp)
+            )
+        } else {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.Center
+            ) {
+                // Feet input with placeholder
+                OutlinedTextField(
+                    value = feetValue,
+                    onValueChange = { newValue ->
+                        if (newValue.isEmpty() || newValue.all { it.isDigit() }) {
+                            onFeetValueChange(newValue)
+
+                            // Update cm when feet changes
+                            val feet = newValue.toIntOrNull() ?: 0
+                            val inches = inchesValue.toIntOrNull() ?: 0
+                            feetInchesToCm(feet, inches)
+                        }
+                    },
+                    textStyle = MaterialTheme.typography.displayLarge.copy(
+                        textAlign = TextAlign.Center,
+                    ),
+                    placeholder = {
+                        Text(
+                            text = "0",
+                            style = MaterialTheme.typography.displayLarge.copy(
+                                textAlign = TextAlign.Center,
+                                color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f)
+                            ),
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                    },
+                    keyboardOptions = KeyboardOptions.Default.copy(
+                        keyboardType = KeyboardType.Number
+                    ),
+                    singleLine = true,
+                    colors = TextFieldDefaults.colors(
+                        focusedContainerColor = Color.Transparent,
+                        unfocusedContainerColor = Color.Transparent,
+                        disabledContainerColor = Color.Transparent,
+                        focusedIndicatorColor = Color.Transparent,
+                        unfocusedIndicatorColor = Color.Transparent,
+                        cursorColor = MaterialTheme.colorScheme.primary
+                    ),
+                    modifier = Modifier.width(100.dp)
+                )
+
+                Text(
+                    text = "ft",
+                    style = MaterialTheme.typography.titleLarge,
+                    color = MaterialTheme.colorScheme.onBackground,
+                    modifier = Modifier.padding(horizontal = 8.dp)
+                )
+
+                // Inches input with placeholder
+                OutlinedTextField(
+                    value = inchesValue,
+                    onValueChange = { newValue ->
+                        if (newValue.isEmpty() || newValue.all { it.isDigit() }) {
+                            onInchesValueChange(newValue)
+
+                            // Update cm when inches changes
+                            val feet = feetValue.toIntOrNull() ?: 0
+                            val inches = newValue.toIntOrNull() ?: 0
+                            feetInchesToCm(feet, inches)
+                        }
+                    },
+                    textStyle = MaterialTheme.typography.displayLarge.copy(
+                        textAlign = TextAlign.Center,
+                    ),
+                    placeholder = {
+                        Text(
+                            text = "0",
+                            style = MaterialTheme.typography.displayLarge.copy(
+                                textAlign = TextAlign.Center,
+                                color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f)
+                            ),
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                    },
+                    keyboardOptions = KeyboardOptions.Default.copy(
+                        keyboardType = KeyboardType.Number
+                    ),
+                    singleLine = true,
+                    colors = TextFieldDefaults.colors(
+                        focusedContainerColor = Color.Transparent,
+                        unfocusedContainerColor = Color.Transparent,
+                        disabledContainerColor = Color.Transparent,
+                        focusedIndicatorColor = Color.Transparent,
+                        unfocusedIndicatorColor = Color.Transparent,
+                        cursorColor = MaterialTheme.colorScheme.primary
+                    ),
+                    modifier = Modifier.width(100.dp)
+                )
+
+                Text(
+                    text = "in",
+                    style = MaterialTheme.typography.titleLarge,
+                    color = MaterialTheme.colorScheme.onBackground,
+                    modifier = Modifier.padding(horizontal = 8.dp)
+                )
+            }
+        }
+
+        Spacer(modifier = Modifier.height(24.dp))
+
+        // Custom segmented toggle button
+        Box(
+            modifier = Modifier
+                .width(240.dp)
+                .height(48.dp)
+                .clip(RoundedCornerShape(24.dp))
+                .background(MaterialTheme.colorScheme.surfaceVariant)
+        ) {
+            Row(
+                modifier = Modifier.fillMaxSize()
+            ) {
+                // CM option
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxHeight()
+                        .clip(RoundedCornerShape(24.dp))
+                        .background(
+                            if (useCentimeters) MaterialTheme.colorScheme.primary
+                            else Color.Transparent
+                        )
+                        .clickable(
+                            interactionSource = remember { MutableInteractionSource() },
+                            indication = null
+                        ) { onUseCentimeters(true) },
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = "cm",
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = if (useCentimeters)
+                            MaterialTheme.colorScheme.onPrimary
+                        else
+                            MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+
+                // Ft & In option
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxHeight()
+                        .clip(RoundedCornerShape(24.dp))
+                        .background(
+                            if (!useCentimeters) MaterialTheme.colorScheme.primary
+                            else Color.Transparent
+                        )
+                        .clickable(
+                            interactionSource = remember { MutableInteractionSource() },
+                            indication = null
+                        ) { onUseCentimeters(false) },
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = "ft & in",
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = if (!useCentimeters)
+                            MaterialTheme.colorScheme.onPrimary
+                        else
+                            MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+        }
+    }
+
+    AnimatedCustomButton(
+        onClick = onContinueClick,
+        text = "Continue",
+        backgroundColor = MaterialTheme.colorScheme.primary,
+        textColor = MaterialTheme.colorScheme.onPrimary,
+        modifier = Modifier.fillMaxWidth()
+    )
 }
+
+
 
 @Preview(showBackground = true)
 @Composable
@@ -367,3 +815,4 @@ fun PreviewHeightInputScreen() {
         HeightInputScreen()
     }
 }
+
