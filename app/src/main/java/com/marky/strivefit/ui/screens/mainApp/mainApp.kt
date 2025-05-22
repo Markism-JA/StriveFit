@@ -32,7 +32,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
-import com.marky.strivefit.ui.components.mainApp.MainScreens
+import com.marky.strivefit.ui.navigation.MainRoutes
 import com.marky.strivefit.ui.components.mainApp.NavigationBar
 import com.marky.strivefit.ui.components.mainApp.QuickActionFab
 import com.marky.strivefit.ui.components.mainApp.TopBar
@@ -48,10 +48,10 @@ fun MainAppScreen(
     val currentThemeMode = themeManager.themeMode.collectAsState().value
     val navController = rememberNavController()
     val screens = listOf(
-        MainScreens.Home,
-        MainScreens.Workout,
-        MainScreens.Challenges,
-        MainScreens.Stats
+        MainRoutes.Home,
+        MainRoutes.Workout,
+        MainRoutes.Challenges,
+        MainRoutes.Stats
     )
 
     val configuration = LocalConfiguration.current
@@ -78,7 +78,7 @@ fun MainAppScreen(
 
         val navBackStackEntry by navController.currentBackStackEntryAsState()
         val currentRoute = navBackStackEntry?.destination?.route
-        val isHomeSelected = currentRoute == MainScreens.Home.route
+        val isHomeSelected = currentRoute == MainRoutes.Home.route
 
         Box(
             modifier = Modifier.fillMaxSize(),
@@ -130,14 +130,14 @@ fun MainAppScreen(
                     ) {
                         NavHost(
                             navController = navController,
-                            startDestination = MainScreens.Home.route,
+                            startDestination = MainRoutes.Home.route,
                             enterTransition = { EnterTransition.None },
                             exitTransition = { ExitTransition.None }
                         ) {
-                            composable(MainScreens.Home.route) { currentScreenTitle = "Home"; HomeScreen() }
-                            composable(MainScreens.Workout.route) { currentScreenTitle = "Workout"; WorkoutScreen() }
-                            composable(MainScreens.Challenges.route) { currentScreenTitle = "Challenges"; ChallengesScreen() }
-                            composable(MainScreens.Stats.route) { currentScreenTitle = "Stats"; StatsScreen() }
+                            composable(MainRoutes.Home.route) { currentScreenTitle = "Home"; HomeScreen() }
+                            composable(MainRoutes.Workout.route) { currentScreenTitle = "Workout"; WorkoutScreen() }
+                            composable(MainRoutes.Challenges.route) { currentScreenTitle = "Challenges"; ChallengesScreen() }
+                            composable(MainRoutes.Stats.route) { currentScreenTitle = "Stats"; StatsScreen() }
                         }
                     }
                 }

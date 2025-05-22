@@ -3,7 +3,7 @@ plugins {
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.hilt)
-    alias(libs.plugins.ksp)
+    alias(libs.plugins.ksp) // or latest
 }
 
 android {
@@ -22,7 +22,7 @@ android {
 
     buildTypes {
         release {
-            isMinifyEnabled = false
+            isMinifyEnabled = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
@@ -42,8 +42,16 @@ android {
 }
 
 dependencies {
+    //firebase
+    //noinspection UseTomlInstead
+    implementation(platform("com.google.firebase:firebase-bom:33.14.0"))
+    //noinspection UseTomlInstead
+    implementation("com.google.firebase:firebase-analytics")
+    implementation("com.google.firebase:firebase-firestore-ktx")
+
     // Hilt
     implementation(libs.hilt.android.v2562)
+    implementation(libs.androidx.room.runtime)
     ksp(libs.hilt.android.compiler)
     implementation(libs.androidx.hilt.navigation.compose)
 
@@ -64,8 +72,8 @@ dependencies {
     implementation(libs.androidx.security.crypto)
 
     // Room
-    implementation(libs.androidx.room.common)
     implementation(libs.androidx.annotation)
+    implementation(libs.androidx.room.ktx) // Add this for coroutine support in Room
 
     // Font
     implementation(libs.androidx.ui.text.google.fonts)
@@ -87,4 +95,9 @@ dependencies {
     // Window Imports
     implementation(libs.androidx.material3.window.size.class1)
     implementation(libs.androidx.window)
+
+    //GIF Support
+    implementation(libs.coil.compose)
+    ksp(libs.androidx.room.compiler)
+
 }

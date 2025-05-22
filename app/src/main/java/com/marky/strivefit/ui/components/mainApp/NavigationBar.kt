@@ -27,16 +27,16 @@ import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
-import com.marky.strivefit.ui.components.mainApp.MainScreens
 import com.marky.strivefit.ui.theme.CommonColors
 import com.marky.strivefit.ui.theme.LocalThemeMode
 import com.marky.strivefit.ui.theme.ThemeMode
 import androidx.compose.runtime.getValue
+import com.marky.strivefit.ui.navigation.MainRoutes
 
 @Composable
 fun NavigationBar(
     navController: NavHostController,
-    screens: List<MainScreens>,
+    screens: List<MainRoutes>,
     modifier: Modifier = Modifier.Companion
 ) {
     val navBackStackEntry by navController.currentBackStackEntryAsState()
