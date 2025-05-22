@@ -1,4 +1,4 @@
-package com.marky.strivefit.ui.screens.mainApp
+package com.marky.strivefit.ui.components.mainApp
 
 import androidx.compose.ui.graphics.vector.ImageVector
 
