@@ -1,6 +1,5 @@
-package com.marky.strivefit.ui.screens.mainApp
+package com.marky.strivefit.ui.components.mainApp
 
-import androidx.compose.runtime.getValue
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -28,14 +27,17 @@ import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
+import com.marky.strivefit.ui.components.mainApp.MainScreens
 import com.marky.strivefit.ui.theme.CommonColors
 import com.marky.strivefit.ui.theme.LocalThemeMode
 import com.marky.strivefit.ui.theme.ThemeMode
+import androidx.compose.runtime.getValue
+
 @Composable
 fun NavigationBar(
     navController: NavHostController,
-    screens: List<BottomBarScreen>,
-    modifier: Modifier = Modifier
+    screens: List<MainScreens>,
+    modifier: Modifier = Modifier.Companion
 ) {
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentDestination = navBackStackEntry?.destination
@@ -48,40 +50,40 @@ fun NavigationBar(
         // Secondary panel/background that will show behind the main surface
         // This creates the appearance of a cutout when combined with the transparent area in the main surface
         Surface(
-            modifier = Modifier
+            modifier = Modifier.Companion
                 .fillMaxWidth()
-                .align(Alignment.BottomCenter)
+                .align(Alignment.Companion.BottomCenter)
                 .height(64.dp),
-            color = Color.Transparent,
+            color = Color.Companion.Transparent,
             shape = RoundedCornerShape(24.dp)
         ) {}
 
         // Main navigation surface
         Surface(
-            modifier = Modifier
+            modifier = Modifier.Companion
                 .fillMaxWidth()
-                .align(Alignment.BottomCenter)
+                .align(Alignment.Companion.BottomCenter)
                 .height(64.dp),
             color = when (LocalThemeMode.current) {
                 ThemeMode.LIGHT -> CommonColors.bottomNavLight
                 ThemeMode.DARK -> CommonColors.bottomNavDark
                 ThemeMode.SYSTEM -> if (isSystemInDarkTheme()) CommonColors.bottomNavDark else CommonColors.bottomNavLight
             },
-            shape = RoundedCornerShape(24.dp)
+            shape = androidx.compose.foundation.shape.RoundedCornerShape(24.dp)
         ) {
             Row(
-                modifier = Modifier
+                modifier = Modifier.Companion
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp),
                 horizontalArrangement = Arrangement.SpaceEvenly,
-                verticalAlignment = Alignment.CenterVertically
+                verticalAlignment = Alignment.Companion.CenterVertically
             ) {
                 screens.forEach { screen ->
                     val selected =
                         currentDestination?.hierarchy?.any { it.route == screen.route } == true
 
                     Box(
-                        modifier = Modifier
+                        modifier = Modifier.Companion
                             .weight(1f)
                             .clickable(
                                 enabled = !selected,
@@ -93,7 +95,7 @@ fun NavigationBar(
                                     launchSingleTop = true
                                 }
                             },
-                        contentAlignment = Alignment.Center
+                        contentAlignment = Alignment.Companion.Center
                     ) {
                         if (!selected) {
                             // Regular icon for unselected items
@@ -101,15 +103,15 @@ fun NavigationBar(
                                 imageVector = screen.icon,
                                 contentDescription = screen.title,
                                 tint = MaterialTheme.colorScheme.onBackground,
-                                modifier = Modifier.size(24.dp)
+                                modifier = Modifier.Companion.size(24.dp)
                             )
                         } else {
                             // This creates the "hole" in the navigation bar
                             Box(
-                                modifier = Modifier
+                                modifier = Modifier.Companion
                                     .size(56.dp)
                                     .clip(CircleShape)
-                                    .background(Color.Transparent)
+                                    .background(Color.Companion.Transparent)
                             )
                         }
                     }
@@ -119,24 +121,24 @@ fun NavigationBar(
 
         // Selected item indicators (the floating buttons)
         Row(
-            modifier = Modifier
+            modifier = Modifier.Companion
                 .fillMaxWidth()
                 .padding(horizontal = 16.dp),
             horizontalArrangement = Arrangement.SpaceEvenly,
-            verticalAlignment = Alignment.CenterVertically
+            verticalAlignment = Alignment.Companion.CenterVertically
         ) {
             screens.forEach { screen ->
                 val selected =
                     currentDestination?.hierarchy?.any { it.route == screen.route } == true
 
                 Box(
-                    modifier = Modifier.weight(1f),
-                    contentAlignment = Alignment.Center
+                    modifier = Modifier.Companion.weight(1f),
+                    contentAlignment = Alignment.Companion.Center
                 ) {
                     if (selected) {
                         // Circular box matching the app background
                         Box(
-                            modifier = Modifier
+                            modifier = Modifier.Companion
                                 .size(70.dp)
                                 .clip(CircleShape)
                                 .background(MaterialTheme.colorScheme.background)
@@ -144,7 +146,7 @@ fun NavigationBar(
 
                         // Selected Icon
                         Box(
-                            modifier = Modifier
+                            modifier = Modifier.Companion
                                 .size(56.dp)
                                 .clip(CircleShape)
                                 .background(MaterialTheme.colorScheme.primary)
@@ -157,13 +159,13 @@ fun NavigationBar(
                                         launchSingleTop = true
                                     }
                                 },
-                            contentAlignment = Alignment.Center
+                            contentAlignment = Alignment.Companion.Center
                         ) {
                             Icon(
                                 imageVector = screen.icon,
                                 contentDescription = screen.title,
                                 tint = MaterialTheme.colorScheme.onPrimary,
-                                modifier = Modifier.size(24.dp)
+                                modifier = Modifier.Companion.size(24.dp)
                             )
                         }
                     }
