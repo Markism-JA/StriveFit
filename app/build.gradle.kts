@@ -3,12 +3,12 @@ plugins {
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.hilt)
-    alias(libs.plugins.ksp) // or latest
+    alias(libs.plugins.ksp)
 }
 
 android {
     namespace = "com.marky.strivefit"
-    compileSdk = 36
+    compileSdk = 35
 
     defaultConfig {
         applicationId = "com.marky.strivefit"
