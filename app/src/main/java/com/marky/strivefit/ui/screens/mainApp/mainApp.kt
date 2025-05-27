@@ -133,6 +133,22 @@ fun MainAppScreen(
                                 currentScreenTitle = "Stats"
                                 StatsScreen()
                             }
+                            composable("run_activity") {
+                                currentScreenTitle = "Running"
+                                RunningActivityScreen()
+                            }
+                            composable("exercise_activity") {
+                                currentScreenTitle = "Exercising"
+                                ExerciseActivityScreen(
+                                    onStartClick = { navController.navigate("bike_activity") }
+                                )
+                            }
+
+
+                            composable("bike_activity") {
+                                currentScreenTitle = "Biking"
+                                BikeActivityScreen()
+                            }
                         }
                     }
                 }
@@ -143,6 +159,7 @@ fun MainAppScreen(
         if (isHomeSelected) {
             Box(modifier = Modifier.fillMaxSize()) {
                 QuickActionFab(
+                    navController = navController,
                     modifier = Modifier
                         .align(Alignment.BottomEnd)
                         .padding(bottom = 80.dp, end = (16.dp + horizontalContentPadding))

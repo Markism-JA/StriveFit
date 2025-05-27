@@ -309,7 +309,7 @@ private fun SignUpPortraitLayout(
             isChecked = isTermsAccepted,
             onCheckedChange = onTermsAcceptedChange,
             onTermsClick = onTermsClick,
-            onPrivacyClick = onPrivacyClick
+            onPrivacyClick = onPrivacyClick,
         )
 
         Spacer(modifier = Modifier.height(verticalSpacing * 1.5f))

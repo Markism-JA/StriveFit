@@ -143,9 +143,7 @@ fun WorkoutPreferencesScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .verticalScroll(rememberScrollState()),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.SpaceBetween
+                
         ) {
             when {
                 isLandscape -> {
@@ -235,18 +233,21 @@ private fun PreferencesLandscapeLayout(
     onIsAm: (Boolean) -> Unit,
 ) {
     val verticalSpacing = when (heightSizeClass) {
-        WindowHeightSizeClass.Expanded -> 16.dp
-        WindowHeightSizeClass.Medium -> 12.dp
-        else -> 8.dp
+        WindowHeightSizeClass.Expanded -> 12.dp
+        WindowHeightSizeClass.Medium -> 8.dp
+        else -> 6.dp
     }
     Column(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalAlignment = Alignment.CenterHorizontally
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(horizontal = 80.dp)
+            .verticalScroll(scrollState)
     ) {
+
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(vertical = 16.dp)
+                .padding(vertical = verticalSpacing)
         ) {
             GoBackButton(
                 onClick = onBackClick,
@@ -447,35 +448,36 @@ private fun PreferencesLandscapeLayout(
                         .padding(top = 4.dp)
                 )
             }
-        }
 
-        // Create plan button
-        AnimatedCustomButton(
-            onClick = onCreatePlanClick,
-            text = "Create My Plan",
-            backgroundColor = MaterialTheme.colorScheme.primary,
-            textColor = MaterialTheme.colorScheme.onPrimary,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(vertical = 16.dp)
-        )
-    }
+
+            // Create plan button
+            AnimatedCustomButton(
+                onClick = onCreatePlanClick,
+                text = "Create My Plan",
+                backgroundColor = MaterialTheme.colorScheme.primary,
+                textColor = MaterialTheme.colorScheme.onPrimary,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 16.dp)
+            )
 
 
 // Time picker dialog
-    if (showTimePicker) {
-        TimePickerDialog(
-            initialHour = preferredHour,
-            initialMinute = preferredMinute,
-            initialIsAm = isAm,
-            onTimeSelected = { hour, minute, am ->
-                onPreferredHour(hour)
-                onPreferredMinute(minute)
-                onIsAm(am)
-                onShowTimePicker(false)
-            },
-            onDismiss = { onShowTimePicker(false) }
-        )
+            if (showTimePicker) {
+                TimePickerDialog(
+                    initialHour = preferredHour,
+                    initialMinute = preferredMinute,
+                    initialIsAm = isAm,
+                    onTimeSelected = { hour, minute, am ->
+                        onPreferredHour(hour)
+                        onPreferredMinute(minute)
+                        onIsAm(am)
+                        onShowTimePicker(false)
+                    },
+                    onDismiss = { onShowTimePicker(false) }
+                )
+            }
+        }
     }
 }
 

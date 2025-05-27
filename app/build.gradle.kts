@@ -87,4 +87,8 @@ dependencies {
     // Window Imports
     implementation(libs.androidx.material3.window.size.class1)
     implementation(libs.androidx.window)
+
+    implementation("androidx.compose.material:material-icons-extended:1.5.0")
+
+
 }

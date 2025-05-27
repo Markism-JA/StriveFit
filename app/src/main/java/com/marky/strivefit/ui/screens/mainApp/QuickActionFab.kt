@@ -44,10 +44,12 @@ import com.composables.icons.lucide.Bike
 import com.composables.icons.lucide.Dumbbell
 import com.composables.icons.lucide.Footprints
 import com.composables.icons.lucide.Lucide
+import androidx.navigation.NavController
 
 @Composable
 fun QuickActionFab(
-    modifier: Modifier = Modifier.Companion
+    modifier: Modifier = Modifier.Companion,
+    navController: NavController
 ) {
     var isFabExpanded by remember { mutableStateOf(false) }
 
@@ -55,17 +57,23 @@ fun QuickActionFab(
         QuickActionItem(
             icon = Lucide.Bike,
             label = "Bike",
-            onClick = { /* Handle bike action */ }
+            onClick = {
+                navController.navigate("bike_activity")
+            }
         ),
         QuickActionItem(
             icon = Lucide.Footprints,
             label = "Run",
-            onClick = { /* Handle run action */ }
+            onClick = {
+                navController.navigate("run_activity")
+            }
         ),
         QuickActionItem(
             icon = Lucide.BicepsFlexed,
             label = "Exercise",
-            onClick = { /* Handle exercise action */ }
+            onClick = {
+                navController.navigate("exercise_activity")
+            }
         )
     )
 
