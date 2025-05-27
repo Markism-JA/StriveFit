@@ -8,11 +8,11 @@ plugins {
 
 android {
     namespace = "com.marky.strivefit"
-    compileSdk = 35
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "com.marky.strivefit"
-        minSdk = 24
+        minSdk = 26
         targetSdk = 35
         versionCode = 1
         versionName = "1.0"
@@ -106,4 +106,17 @@ dependencies {
     //Health Connect
     //noinspection UseTomlInstead
     implementation("androidx.health.connect:connect-client:1.1.0-rc01")
+
+    //Gson - for handling json documents from firebase
+    //noinspection UseTomlInstead
+    implementation("com.google.code.gson:gson:2.13.1")
+
+    //Image Coil - auto caching from link so no need to manage path manually via room
+    //noinspection UseTomlInstead
+    implementation("io.coil-kt:coil-compose:2.5.0")
+    // For SVG support
+    implementation("io.coil-kt:coil-svg:2.5.0")
+
+    implementation("io.coil-kt:coil-gif:2.5.0")
+    implementation("io.coil-kt:coil-webp:2.5.0")
 }

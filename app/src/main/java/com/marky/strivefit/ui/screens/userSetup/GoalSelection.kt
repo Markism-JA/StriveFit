@@ -70,10 +70,8 @@ fun GoalsInputScreen(
     val goalOptions = listOf(
         "Build muscle",
         "Lose weight",
-        "Improve fitness",
+        "Improve endurance",
         "Increase strength",
-        "Improve flexibility",
-        "Train for sports",
         "Maintain current fitness"
     )
 
