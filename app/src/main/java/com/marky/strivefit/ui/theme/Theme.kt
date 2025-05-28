@@ -26,7 +26,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsControllerCompat
-import com.marky.strivefit.ui.viewModel.ThemeManager
+import com.marky.strivefit.ui.viewModel.ThemeManagerViewModel
 
 var LocalThemeMode = staticCompositionLocalOf { ThemeMode.SYSTEM }
 
@@ -224,7 +224,7 @@ fun StriveFitTheme(
     dynamicColor: Boolean = false,
     content: @Composable () -> Unit
 ) {
-    val themeManager: ThemeManager = hiltViewModel()
+    val themeManager: ThemeManagerViewModel = hiltViewModel()
     val themeMode by themeManager.themeMode.collectAsState()
     val colorOption by themeManager.colorOption.collectAsState()
     val colorScheme = getColorScheme(themeMode, colorOption, dynamicColor)

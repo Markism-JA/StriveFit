@@ -1,7 +1,5 @@
 package com.marky.strivefit.ui.viewModel
 
-import android.annotation.SuppressLint
-import androidx.compose.runtime.Composable
 import androidx.lifecycle.ViewModel
 import com.marky.strivefit.ui.theme.ThemeColorOption
 import com.marky.strivefit.ui.theme.ThemeMode
@@ -11,7 +9,7 @@ import kotlinx.coroutines.flow.StateFlow
 import javax.inject.Inject
 
 @HiltViewModel
-class  ThemeManager @Inject constructor() : ViewModel() {
+class  ThemeManagerViewModel @Inject constructor() : ViewModel() {
     private val _themeMode = MutableStateFlow(ThemeMode.SYSTEM)
     val themeMode: StateFlow<ThemeMode> = _themeMode
 

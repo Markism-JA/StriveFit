@@ -4,11 +4,12 @@ plugins {
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.hilt)
     alias(libs.plugins.ksp)
+    id("com.google.gms.google-services") version "4.4.2" apply false
 }
 
 android {
     namespace = "com.marky.strivefit"
-    compileSdk = 35
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "com.marky.strivefit"
@@ -50,6 +51,14 @@ dependencies {
     implementation("com.google.firebase:firebase-analytics")
     //noinspection UseTomlInstead
     implementation("com.google.firebase:firebase-firestore-ktx")
+    //noinspection UseTomlInstead
+    implementation("com.google.firebase:firebase-auth-ktx")
+    implementation(libs.play.services.auth)
+    implementation("com.google.android.gms:play-services-identity:18.1.0")
+    implementation ("androidx.credentials:credentials:1.5.0")
+    implementation ("androidx.credentials:credentials-play-services-auth:1.6.0-alpha02")
+    implementation ("com.google.android.libraries.identity.googleid:googleid:1.1.1")
+
 
     // Hilt
     implementation(libs.hilt.android.v2562)
@@ -113,7 +122,7 @@ dependencies {
 
     //Image Coil - auto caching from link so no need to manage path manually via room
     //noinspection UseTomlInstead
-    implementation("io.coil-kt:coil-compose:2.5.0")
+    implementation("io.coil-kt:coil-compose:2.6.0")
     // For SVG support
     implementation("io.coil-kt:coil-svg:2.5.0")
 
@@ -122,3 +131,4 @@ dependencies {
     //Flow Row
     implementation("com.google.accompanist:accompanist-flowlayout:0.28.0")
 }
+apply(plugin = "com.google.gms.google-services")

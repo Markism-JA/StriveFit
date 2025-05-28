@@ -38,13 +38,13 @@ import com.marky.strivefit.ui.components.mainApp.QuickActionFab
 import com.marky.strivefit.ui.components.mainApp.TopBar
 import com.marky.strivefit.ui.theme.StriveFitTheme
 import com.marky.strivefit.ui.utilities.calculateWindowWidthSizeClass
-import com.marky.strivefit.ui.viewModel.ThemeManager
+import com.marky.strivefit.ui.viewModel.ThemeManagerViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MainAppScreen(
 ) {
-    val themeManager: ThemeManager = hiltViewModel()
+    val themeManager: ThemeManagerViewModel = hiltViewModel()
     val currentThemeMode = themeManager.themeMode.collectAsState().value
     val navController = rememberNavController()
     val screens = listOf(
