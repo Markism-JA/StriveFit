@@ -1,25 +1,45 @@
 package com.marky.strivefit.ui.screens.onBoarding
 
-import LegalContentType // Assuming this is defined elsewhere
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.ScrollState
+//import androidx.compose.material3.HorizontalDivider // Not used in the provided snippet directly, but good practice to keep if used elsewhere
+import LegalContentType
+import android.util.Patterns
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
+import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.*
-//import androidx.compose.material3.HorizontalDivider // Not used in the provided snippet directly, but good practice to keep if used elsewhere
+import androidx.compose.material3.Checkbox
+import androidx.compose.material3.CheckboxDefaults
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.material3.windowsizeclass.WindowHeightSizeClass
 import androidx.compose.material3.windowsizeclass.WindowSizeClass
 import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
@@ -31,6 +51,7 @@ import com.marky.strivefit.ui.components.FormField
 import com.marky.strivefit.ui.components.GoBackButton
 import com.marky.strivefit.ui.components.GoogleButton
 import com.marky.strivefit.ui.components.PasswordField
+import com.marky.strivefit.ui.components.PasswordFieldRequirementStatus
 import com.marky.strivefit.ui.utilities.calculateWindowHeightSizeClass
 import com.marky.strivefit.ui.utilities.calculateWindowWidthSizeClass
 import kotlinx.coroutines.delay
@@ -44,7 +65,6 @@ fun SignUp(
     onGoogleSignUpClick: () -> Unit = {}
 ) {
     val configuration = LocalConfiguration.current
-
     val screenWidth = configuration.screenWidthDp.dp
     val screenHeight = configuration.screenHeightDp.dp
 
@@ -84,6 +104,18 @@ fun SignUp(
     // State for managing the legal content dialog
     var showLegalDialog by remember { mutableStateOf<LegalContentType?>(null) }
 
+    val isPasswordStrongEnough = remember(password) {
+        hasMinLength(password) && hasUppercase(password) && hasLowercase(password) && hasDigit(password) && hasSpecialChar(password)
+    }
+    val arePasswordsMatching = remember(password, confirmPassword) {
+        password == confirmPassword
+    }
+    val canEnableSignUpButton = remember(fullName, email, password, confirmPassword, isPasswordStrongEnough, arePasswordsMatching, isTermsAccepted) {
+        isValidFullName(fullName) && isValidEmail(email) &&
+                password.isNotEmpty() && confirmPassword.isNotEmpty() &&
+                isPasswordStrongEnough && arePasswordsMatching &&
+                isTermsAccepted
+    }
 
     LaunchedEffect(Unit) {
         isVisible = true
@@ -143,7 +175,8 @@ fun SignUp(
                         onGoogleSignUpClick = onGoogleSignUpClick,
                         onTermsClick = { showLegalDialog = LegalContentType.TERMS_OF_SERVICE },
                         onPrivacyClick = { showLegalDialog = LegalContentType.PRIVACY_POLICY },
-                        scrollState = scrollState
+                        scrollState = scrollState,
+                        isSignUpEnabled = canEnableSignUpButton
                     )
                 }
                 else -> {
@@ -182,7 +215,8 @@ fun SignUp(
                         onGoogleSignUpClick = onGoogleSignUpClick,
                         onTermsClick = { showLegalDialog = LegalContentType.TERMS_OF_SERVICE },
                         onPrivacyClick = { showLegalDialog = LegalContentType.PRIVACY_POLICY },
-                        scrollState = scrollState
+                        scrollState = scrollState,
+                        isSignUpEnabled = canEnableSignUpButton
                     )
                 }
             }
@@ -227,12 +261,27 @@ private fun SignUpPortraitLayout(
     onGoogleSignUpClick: () -> Unit,
     onTermsClick: () -> Unit,
     onPrivacyClick: () -> Unit,
+    isSignUpEnabled: Boolean,
     scrollState: ScrollState
 ) {
     val verticalSpacing = when (heightSizeClass) {
         WindowHeightSizeClass.Expanded -> 16.dp
         WindowHeightSizeClass.Medium -> 12.dp
         else -> 8.dp
+    }
+    val passwordRequirementsList = remember(password, isPasswordFocused)
+    {
+        if (isPasswordFocused) {
+            listOf(
+                PasswordFieldRequirementStatus("Minimum 8 characters", hasMinLength(password)),
+                PasswordFieldRequirementStatus("1 uppercase", hasUppercase(password)),
+                PasswordFieldRequirementStatus("1 lowercase", hasLowercase(password)),
+                PasswordFieldRequirementStatus("1 digit", hasDigit(password)),
+                PasswordFieldRequirementStatus("1 special char", hasSpecialChar(password))
+                )
+        } else {
+            null
+        }
     }
 
     Column(
@@ -289,6 +338,8 @@ private fun SignUpPortraitLayout(
             onTogglePasswordVisibility = onTogglePasswordVisibility,
             isFocused = isPasswordFocused,
             onFocusChanged = onPasswordFocusChanged,
+            passwordRequirements = passwordRequirementsList,
+            errorMessage = null
         )
 
         Spacer(modifier = Modifier.height(verticalSpacing))
@@ -301,6 +352,11 @@ private fun SignUpPortraitLayout(
             onTogglePasswordVisibility = onToggleConfirmPasswordVisibility,
             isFocused = isConfirmPasswordFocused,
             onFocusChanged = onConfirmPasswordFocusChanged,
+            errorMessage = if (confirmPassword.isNotEmpty() && password != confirmPassword && (isConfirmPasswordFocused || password.length >= confirmPassword.length)) {
+                "Passwords do not match"
+            } else {
+                null
+            }
         )
 
         Spacer(modifier = Modifier.height(verticalSpacing))
@@ -320,7 +376,7 @@ private fun SignUpPortraitLayout(
             backgroundColor = MaterialTheme.colorScheme.primary,
             textColor = MaterialTheme.colorScheme.onPrimary,
             modifier = Modifier.fillMaxWidth(),
-            //enabled = isTermsAccepted // This was commented out in original, re-instating as it's common logic
+            enabled = isSignUpEnabled
         )
 
 
@@ -366,12 +422,28 @@ private fun SignUpLandscapeLayout(
     onGoogleSignUpClick: () -> Unit,
     onTermsClick: () -> Unit,
     onPrivacyClick: () -> Unit,
-    scrollState: ScrollState
+    scrollState: ScrollState,
+    isSignUpEnabled: Boolean
 ) {
     val verticalSpacing = when (heightSizeClass) {
         WindowHeightSizeClass.Expanded -> 12.dp
         WindowHeightSizeClass.Medium -> 8.dp
         else -> 6.dp
+    }
+
+    val passwordRequirementsList = remember(password, isPasswordFocused)
+    {
+        if (isPasswordFocused) {
+            listOf(
+                PasswordFieldRequirementStatus("Minimum 8 characters", hasMinLength(password)),
+                PasswordFieldRequirementStatus("1 uppercase", hasUppercase(password)),
+                PasswordFieldRequirementStatus("1 lowercase", hasLowercase(password)),
+                PasswordFieldRequirementStatus("1 digit", hasDigit(password)),
+                PasswordFieldRequirementStatus("1 special char", hasSpecialChar(password))
+            )
+        } else {
+            null
+        }
     }
 
     Column(
@@ -438,16 +510,23 @@ private fun SignUpLandscapeLayout(
                     onTogglePasswordVisibility = onTogglePasswordVisibility,
                     isFocused = isPasswordFocused,
                     onFocusChanged = onPasswordFocusChanged,
+                    passwordRequirements = passwordRequirementsList,
+                    errorMessage = null
                 )
 
                 PasswordField(
                     label = "Confirm Password",
                     value = confirmPassword,
                     onValueChange = onConfirmPasswordChange,
+                    onTogglePasswordVisibility = onToggleConfirmPasswordVisibility,
                     isPasswordVisible = isConfirmPasswordVisible,
                     isFocused = isConfirmPasswordFocused,
                     onFocusChanged = onConfirmPasswordFocusChanged,
-                    onTogglePasswordVisibility = onToggleConfirmPasswordVisibility
+                    errorMessage = if (confirmPassword.isNotEmpty() && password != confirmPassword && (isConfirmPasswordFocused || password.length >= confirmPassword.length)) {
+                        "Passwords do not match"
+                    } else {
+                        null
+                    }
                 )
             }
         }
@@ -479,7 +558,7 @@ private fun SignUpLandscapeLayout(
                     backgroundColor = MaterialTheme.colorScheme.primary,
                     textColor = MaterialTheme.colorScheme.onPrimary,
                     modifier = Modifier.fillMaxWidth(),
-                    //enabled = isTermsAccepted // This was commented out in original, re-instating
+                    enabled = isSignUpEnabled
                 )
             }
 
@@ -550,4 +629,21 @@ private fun TermsAndConditionsCheckbox(
     }
 }
 
+fun isValidFullName(fullName: String): Boolean {
+    val nameRegex = Regex("^[\\p{L} .'-]{2,100}$")
+    return nameRegex.matches(fullName.trim())
+}
 
+fun isValidEmail(email: String): Boolean {
+    return Patterns.EMAIL_ADDRESS.matcher(email).matches() && email.length <= 254 //Email is valid
+}
+
+//password
+fun hasMinLength(password: String) = password.length >= 8
+fun hasUppercase(password: String) = password.any { it.isUpperCase() }
+fun hasLowercase(password: String) = password.any { it.isLowerCase() }
+fun hasDigit(password: String) = password.any { it.isDigit() }
+fun hasSpecialChar(password: String) = password.any { "!@#\$%^&*()_+{}[]|:;\"'<>,.?/~`-=".contains(it) }
+
+// TODO: Disable SignUp Button in the case wherein all fields is still not validated and when check box is also not checked
+// TODO: Password should be shown and hidden within a certain time, password must match

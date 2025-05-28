@@ -19,7 +19,8 @@ fun AnimatedCustomButton(
     text: String,
     backgroundColor: Color,
     textColor: Color,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true
 ) {
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
@@ -29,6 +30,7 @@ fun AnimatedCustomButton(
 
     Button(
         onClick = onClick,
+        enabled = enabled,
         colors = ButtonDefaults.buttonColors(
             containerColor = backgroundColor,
             contentColor = textColor

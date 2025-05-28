@@ -118,5 +118,7 @@ dependencies {
     implementation("io.coil-kt:coil-svg:2.5.0")
 
     implementation("io.coil-kt:coil-gif:2.5.0")
-    implementation("io.coil-kt:coil-webp:2.5.0")
+
+    //Flow Row
+    implementation("com.google.accompanist:accompanist-flowlayout:0.28.0")
 }
