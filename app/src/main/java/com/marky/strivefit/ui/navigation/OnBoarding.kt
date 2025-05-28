@@ -105,7 +105,7 @@ fun NavGraphBuilder.onboardingNavGraph(navController: NavHostController) {
     ) {
         Login(
             onBackClick = { navController.popBackStack() },
-            onLoginClick = { /* Handle login logic */ },
+            onSuccessfulLogin = { /* Handle login logic */ },
             onGoogleLoginClick = { /* Google login */ },
             onSignupClick = { navController.navigate("signup") }
         )

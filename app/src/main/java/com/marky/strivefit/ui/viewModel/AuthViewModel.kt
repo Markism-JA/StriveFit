@@ -87,6 +87,30 @@ class AuthViewModel @Inject constructor(
     }
 
     fun getCurrentUser() = auth.currentUser
+
+
+    fun signInWithEmailAndPassword(email: String, password: String) {
+        _authState.value = AuthUiState.Loading
+        auth.signInWithEmailAndPassword(email, password)
+            .addOnSuccessListener {
+                _authState.value = AuthUiState.Success
+            }
+            .addOnFailureListener { exception ->
+                val errorMsg = when (exception) {
+                    is FirebaseAuthInvalidUserException -> "No account found with this email." // User not found
+                    is FirebaseAuthInvalidCredentialsException -> "Incorrect password. Please try again." // Wrong password or malformed email
+                    // Add other specific Firebase exceptions as needed
+                    else -> exception.localizedMessage ?: "Login failed. Please try again."
+                }
+                _authState.value = AuthUiState.Error(errorMsg)
+            }
+    }
+
+    fun resetAuthStateToIdle() { // Helper to reset state after an error is shown
+        if (_authState.value is AuthUiState.Error || _authState.value is AuthUiState.Success) {
+            _authState.value = AuthUiState.Idle
+        }
+    }
 }
 
 sealed class AuthUiState {

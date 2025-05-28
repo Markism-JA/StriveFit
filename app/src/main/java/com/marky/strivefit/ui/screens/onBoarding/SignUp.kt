@@ -1,6 +1,5 @@
 package com.marky.strivefit.ui.screens.onBoarding
 
-//import androidx.compose.material3.HorizontalDivider // Not used in the provided snippet directly, but good practice to keep if used elsewhere
 import LegalContentType
 import android.util.Patterns
 import androidx.compose.animation.AnimatedVisibility
@@ -35,6 +34,7 @@ import androidx.compose.material3.windowsizeclass.WindowSizeClass
 import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -46,6 +46,7 @@ import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.marky.strivefit.ui.components.AnimatedCustomButton
 import com.marky.strivefit.ui.components.FormField
 import com.marky.strivefit.ui.components.GoBackButton
@@ -54,16 +55,25 @@ import com.marky.strivefit.ui.components.PasswordField
 import com.marky.strivefit.ui.components.PasswordFieldRequirementStatus
 import com.marky.strivefit.ui.utilities.calculateWindowHeightSizeClass
 import com.marky.strivefit.ui.utilities.calculateWindowWidthSizeClass
+import com.marky.strivefit.ui.viewModel.AuthViewModel
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
+const val PASSWORD_VISIBLE_DURATION_MS = 3000L // 3 seconds
+const val MAX_PASSWORD_LENGTH = 64
+ const val MAX_FULL_NAME_LENGTH = 100
+ const val MAX_EMAIL_LENGTH = 254
+
 @Composable
 fun SignUp(
+    viewModel: AuthViewModel = hiltViewModel(),
     windowSizeClass: WindowSizeClass? = null,
     onBackClick: () -> Unit = {},
     onSignUpClick: () -> Unit = {},
     onGoogleSignUpClick: () -> Unit = {}
 ) {
+    val state = viewModel.authState.collectAsState()
     val configuration = LocalConfiguration.current
     val screenWidth = configuration.screenWidthDp.dp
     val screenHeight = configuration.screenHeightDp.dp
@@ -97,7 +107,21 @@ fun SignUp(
     var isPasswordFocused by remember { mutableStateOf(false) }
     var isConfirmPasswordFocused by remember { mutableStateOf(false) }
 
+    // Validity states for green border success indication
+    var isFullNameActuallyValid by remember(fullName) { mutableStateOf(isValidFullName(fullName)) }
+    var isEmailActuallyValid by remember(email) { mutableStateOf(isValidEmail(email)) }
+
+    val fullNameErrorMessage = if (!isFullNameFocused && fullName.isNotEmpty() && !isFullNameActuallyValid) {
+        "Please enter a valid full name."
+    } else null
+    val emailErrorMessage = if (!isEmailFocused && email.isNotEmpty() && !isEmailActuallyValid) {
+        "Please enter a valid email address."
+    } else null
+
     val scope = rememberCoroutineScope()
+    var passwordVisibilityJob by remember { mutableStateOf<Job?>(null) }
+    var confirmPasswordVisibilityJob by remember { mutableStateOf<Job?>(null) }
+
     var isVisible by remember { mutableStateOf(false) }
     val scrollState = rememberScrollState()
 
@@ -121,6 +145,37 @@ fun SignUp(
         isVisible = true
     }
 
+    val onTogglePasswordVisibilityLambda = {
+        passwordVisibilityJob?.cancel() // Cancel any existing hide timer
+        if (!isPasswordVisible) {
+            isPasswordVisible = true
+            passwordVisibilityJob = scope.launch {
+                delay(PASSWORD_VISIBLE_DURATION_MS)
+                isPasswordVisible = false
+            }
+        } else {
+            isPasswordVisible = false
+        }
+    }
+
+    val onToggleConfirmPasswordVisibilityLambda = {
+        confirmPasswordVisibilityJob?.cancel() // Cancel any existing hide timer
+        if (!isConfirmPasswordVisible) {
+            isConfirmPasswordVisible = true
+            confirmPasswordVisibilityJob = scope.launch {
+                delay(PASSWORD_VISIBLE_DURATION_MS)
+                isConfirmPasswordVisible = false
+            }
+        } else {
+            isConfirmPasswordVisible = false
+        }
+    }
+
+    val confirmPasswordErrorMessage = if (confirmPassword.isNotEmpty() && password != confirmPassword && (isConfirmPasswordFocused || password.length >= confirmPassword.length)) {
+        "Passwords do not match"
+    } else {
+        null
+    }
 
     Box(
         modifier = Modifier
@@ -142,22 +197,32 @@ fun SignUp(
                 isLandscape -> {
                     SignUpLandscapeLayout(
                         fullName = fullName,
-                        onFullNameChange = { fullName = it },
+                        onFullNameChange = {
+                            if (it.length <= MAX_FULL_NAME_LENGTH) fullName = it
+                            isFullNameActuallyValid = isValidFullName(it)
+                        },
                         isFullNameFocused = isFullNameFocused,
                         onFullNameFocusChanged = { isFullNameFocused = it },
                         email = email,
-                        onEmailChange = { email = it },
+                        onEmailChange = {
+                           if (it.length <= MAX_EMAIL_LENGTH) email = it
+                            isEmailActuallyValid = isValidEmail(it)
+                        },
                         isEmailFocused = isEmailFocused,
                         onEmailFocusChanged = { isEmailFocused = it },
                         password = password,
-                        onPasswordChange = { password = it },
+                        onPasswordChange = {
+                            if (it.length <= MAX_PASSWORD_LENGTH) password = it
+                        },
                         isPasswordVisible = isPasswordVisible,
-                        onTogglePasswordVisibility = { isPasswordVisible = !isPasswordVisible },
-                        onToggleConfirmPasswordVisibility = { isConfirmPasswordVisible = !isConfirmPasswordVisible },
+                        onTogglePasswordVisibility = onTogglePasswordVisibilityLambda,
+                        onToggleConfirmPasswordVisibility = onToggleConfirmPasswordVisibilityLambda,
                         isPasswordFocused = isPasswordFocused,
                         onPasswordFocusChanged = { isPasswordFocused = it },
                         confirmPassword = confirmPassword,
-                        onConfirmPasswordChange = { confirmPassword = it },
+                        onConfirmPasswordChange = {
+                            if (it.length <= MAX_PASSWORD_LENGTH) confirmPassword = it
+                        },
                         isConfirmPasswordVisible = isConfirmPasswordVisible,
                         isConfirmPasswordFocused = isConfirmPasswordFocused,
                         onConfirmPasswordFocusChanged = { isConfirmPasswordFocused = it },
@@ -176,29 +241,40 @@ fun SignUp(
                         onTermsClick = { showLegalDialog = LegalContentType.TERMS_OF_SERVICE },
                         onPrivacyClick = { showLegalDialog = LegalContentType.PRIVACY_POLICY },
                         scrollState = scrollState,
-                        isSignUpEnabled = canEnableSignUpButton
+                        isSignUpEnabled = canEnableSignUpButton,
+                        isFullNameActuallyValid = isFullNameActuallyValid,
+                        fullNameErrorMessage = fullNameErrorMessage,
+                        isEmailActuallyValid = isEmailActuallyValid,
+                        emailErrorMessage = emailErrorMessage,
+                        confirmPasswordErrorMessage = confirmPasswordErrorMessage
                     )
                 }
                 else -> {
                     SignUpPortraitLayout(
                         fullName = fullName,
-                        onFullNameChange = { fullName = it },
+                        onFullNameChange = {
+                            if (it.length <= MAX_FULL_NAME_LENGTH) fullName = it
+                            isFullNameActuallyValid = isValidFullName(it)
+                        },
                         isFullNameFocused = isFullNameFocused,
                         onFullNameFocusChanged = { isFullNameFocused = it },
                         email = email,
-                        onEmailChange = { email = it },
+                        onEmailChange = {
+                            if (it.length <= MAX_EMAIL_LENGTH) email = it
+                            isEmailActuallyValid = isValidEmail(it)
+                        },
                         isEmailFocused = isEmailFocused,
                         onEmailFocusChanged = { isEmailFocused = it },
                         password = password,
                         onPasswordChange = { password = it },
                         isPasswordVisible = isPasswordVisible,
-                        onTogglePasswordVisibility = { isPasswordVisible = !isPasswordVisible },
+                        onTogglePasswordVisibility = onTogglePasswordVisibilityLambda,
                         isPasswordFocused = isPasswordFocused,
                         onPasswordFocusChanged = { isPasswordFocused = it },
                         confirmPassword = confirmPassword,
                         onConfirmPasswordChange = { confirmPassword = it },
                         isConfirmPasswordVisible = isConfirmPasswordVisible,
-                        onToggleConfirmPasswordVisibility = { isConfirmPasswordVisible = !isConfirmPasswordVisible },
+                        onToggleConfirmPasswordVisibility = onToggleConfirmPasswordVisibilityLambda,
                         isConfirmPasswordFocused = isConfirmPasswordFocused,
                         onConfirmPasswordFocusChanged = { isConfirmPasswordFocused = it },
                         isTermsAccepted = isTermsAccepted,
@@ -216,7 +292,12 @@ fun SignUp(
                         onTermsClick = { showLegalDialog = LegalContentType.TERMS_OF_SERVICE },
                         onPrivacyClick = { showLegalDialog = LegalContentType.PRIVACY_POLICY },
                         scrollState = scrollState,
-                        isSignUpEnabled = canEnableSignUpButton
+                        isSignUpEnabled = canEnableSignUpButton,
+                        isFullNameActuallyValid = isFullNameActuallyValid,
+                        fullNameErrorMessage = fullNameErrorMessage,
+                        isEmailActuallyValid = isEmailActuallyValid,
+                        emailErrorMessage = emailErrorMessage,
+                        confirmPasswordErrorMessage = confirmPasswordErrorMessage
                     )
                 }
             }
@@ -262,7 +343,12 @@ private fun SignUpPortraitLayout(
     onTermsClick: () -> Unit,
     onPrivacyClick: () -> Unit,
     isSignUpEnabled: Boolean,
-    scrollState: ScrollState
+    scrollState: ScrollState,
+    isFullNameActuallyValid: Boolean,
+    fullNameErrorMessage: String?,
+    isEmailActuallyValid: Boolean,
+    emailErrorMessage: String?,
+    confirmPasswordErrorMessage: String?, // New
 ) {
     val verticalSpacing = when (heightSizeClass) {
         WindowHeightSizeClass.Expanded -> 16.dp
@@ -278,7 +364,7 @@ private fun SignUpPortraitLayout(
                 PasswordFieldRequirementStatus("1 lowercase", hasLowercase(password)),
                 PasswordFieldRequirementStatus("1 digit", hasDigit(password)),
                 PasswordFieldRequirementStatus("1 special char", hasSpecialChar(password))
-                )
+            )
         } else {
             null
         }
@@ -314,7 +400,9 @@ private fun SignUpPortraitLayout(
             value = fullName,
             onValueChange = onFullNameChange,
             isFocused = isFullNameFocused,
-            onFocusChanged = onFullNameFocusChanged
+            onFocusChanged = onFullNameFocusChanged,
+            isFieldValid = isFullNameActuallyValid,
+            errorMessage = fullNameErrorMessage
         )
 
         Spacer(modifier = Modifier.height(verticalSpacing))
@@ -325,7 +413,9 @@ private fun SignUpPortraitLayout(
             onValueChange = onEmailChange,
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
             isFocused = isEmailFocused,
-            onFocusChanged = onEmailFocusChanged
+            onFocusChanged = onEmailFocusChanged,
+            isFieldValid = isEmailActuallyValid,
+            errorMessage = emailErrorMessage
         )
 
         Spacer(modifier = Modifier.height(verticalSpacing))
@@ -352,11 +442,7 @@ private fun SignUpPortraitLayout(
             onTogglePasswordVisibility = onToggleConfirmPasswordVisibility,
             isFocused = isConfirmPasswordFocused,
             onFocusChanged = onConfirmPasswordFocusChanged,
-            errorMessage = if (confirmPassword.isNotEmpty() && password != confirmPassword && (isConfirmPasswordFocused || password.length >= confirmPassword.length)) {
-                "Passwords do not match"
-            } else {
-                null
-            }
+            errorMessage = confirmPasswordErrorMessage
         )
 
         Spacer(modifier = Modifier.height(verticalSpacing))
@@ -423,7 +509,12 @@ private fun SignUpLandscapeLayout(
     onTermsClick: () -> Unit,
     onPrivacyClick: () -> Unit,
     scrollState: ScrollState,
-    isSignUpEnabled: Boolean
+    isSignUpEnabled: Boolean,
+    isFullNameActuallyValid: Boolean,
+    fullNameErrorMessage: String?,
+    isEmailActuallyValid: Boolean,
+    emailErrorMessage: String?,
+    confirmPasswordErrorMessage: String?,
 ) {
     val verticalSpacing = when (heightSizeClass) {
         WindowHeightSizeClass.Expanded -> 12.dp
@@ -485,7 +576,9 @@ private fun SignUpLandscapeLayout(
                     value = fullName,
                     onValueChange = onFullNameChange,
                     isFocused = isFullNameFocused,
-                    onFocusChanged = onFullNameFocusChanged
+                    onFocusChanged = onFullNameFocusChanged,
+                    isFieldValid = isFullNameActuallyValid,
+                    errorMessage = fullNameErrorMessage
                 )
 
                 FormField(
@@ -494,7 +587,9 @@ private fun SignUpLandscapeLayout(
                     onValueChange = onEmailChange,
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
                     isFocused = isEmailFocused,
-                    onFocusChanged = onEmailFocusChanged
+                    onFocusChanged = onEmailFocusChanged,
+                    isFieldValid = isEmailActuallyValid,
+                    errorMessage = emailErrorMessage
                 )
             }
 
@@ -505,7 +600,11 @@ private fun SignUpLandscapeLayout(
                 PasswordField(
                     label = "Password",
                     value = password,
-                    onValueChange = onPasswordChange,
+                    onValueChange = { newValue ->
+                        if (newValue.length <= MAX_PASSWORD_LENGTH) {
+                            onPasswordChange(newValue)
+                        }
+                    },
                     isPasswordVisible = isPasswordVisible,
                     onTogglePasswordVisibility = onTogglePasswordVisibility,
                     isFocused = isPasswordFocused,
@@ -517,16 +616,16 @@ private fun SignUpLandscapeLayout(
                 PasswordField(
                     label = "Confirm Password",
                     value = confirmPassword,
-                    onValueChange = onConfirmPasswordChange,
+                    onValueChange ={ newValue ->
+                        if (newValue.length <= MAX_PASSWORD_LENGTH) {
+                            onConfirmPasswordChange(newValue)
+                        }
+                    },
                     onTogglePasswordVisibility = onToggleConfirmPasswordVisibility,
                     isPasswordVisible = isConfirmPasswordVisible,
                     isFocused = isConfirmPasswordFocused,
                     onFocusChanged = onConfirmPasswordFocusChanged,
-                    errorMessage = if (confirmPassword.isNotEmpty() && password != confirmPassword && (isConfirmPasswordFocused || password.length >= confirmPassword.length)) {
-                        "Passwords do not match"
-                    } else {
-                        null
-                    }
+                    errorMessage = confirmPasswordErrorMessage
                 )
             }
         }
@@ -644,6 +743,3 @@ fun hasUppercase(password: String) = password.any { it.isUpperCase() }
 fun hasLowercase(password: String) = password.any { it.isLowerCase() }
 fun hasDigit(password: String) = password.any { it.isDigit() }
 fun hasSpecialChar(password: String) = password.any { "!@#\$%^&*()_+{}[]|:;\"'<>,.?/~`-=".contains(it) }
-
-// TODO: Disable SignUp Button in the case wherein all fields is still not validated and when check box is also not checked
-// TODO: Password should be shown and hidden within a certain time, password must match

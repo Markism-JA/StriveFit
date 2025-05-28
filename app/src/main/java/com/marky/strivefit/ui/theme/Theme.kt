@@ -57,6 +57,8 @@ fun getColorScheme(
 
     return when {
         isDarkTheme && colorOption == ThemeColorOption.DEFAULT -> darkColorScheme(
+            error = CommonColors.error,
+            tertiary = CommonColors.sucess,
             primary = DefaultDark.primary,
             primaryContainer = DefaultDark.primaryContainer,
             secondary = DefaultDark.secondary,
@@ -72,6 +74,8 @@ fun getColorScheme(
             onSecondaryContainer = CommonColors.onSecondaryContainer
         )
         isDarkTheme && colorOption == ThemeColorOption.ENERGETIC -> darkColorScheme(
+            error = CommonColors.error,
+            tertiary = CommonColors.sucess,
             primary = EnergeticDark.primary,
             primaryContainer = EnergeticDark.primaryContainer,
             secondary = EnergeticDark.secondary,
@@ -87,6 +91,8 @@ fun getColorScheme(
             onSecondaryContainer = CommonColors.onSecondaryContainer
         )
         !isDarkTheme && colorOption == ThemeColorOption.DEFAULT -> lightColorScheme(
+            error = CommonColors.error,
+            tertiary = CommonColors.sucess,
             primary = DefaultLight.primary,
             primaryContainer = DefaultLight.primaryContainer,
             secondary = DefaultLight.secondary,
@@ -102,6 +108,8 @@ fun getColorScheme(
             onSecondaryContainer = CommonColors.onSecondaryContainer
         )
         !isDarkTheme && colorOption == ThemeColorOption.ENERGETIC -> lightColorScheme(
+            error = CommonColors.error,
+            tertiary = CommonColors.sucess,
             primary = EnergeticLight.primary,
             primaryContainer = EnergeticLight.primaryContainer,
             secondary = EnergeticLight.secondary,
@@ -117,6 +125,8 @@ fun getColorScheme(
             onSecondaryContainer = CommonColors.onSecondaryContainer
         )
         else -> lightColorScheme(
+            error = CommonColors.error,
+            tertiary = CommonColors.sucess,
             primary = DefaultLight.primary,
             primaryContainer = DefaultLight.primaryContainer,
             secondary = DefaultLight.secondary,

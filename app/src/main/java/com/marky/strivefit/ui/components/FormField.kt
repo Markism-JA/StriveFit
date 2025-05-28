@@ -23,12 +23,12 @@ fun FormField(
     onValueChange: (String) -> Unit,
     keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
     isFocused: Boolean,
-    onFocusChanged: (Boolean) -> Unit
+    onFocusChanged: (Boolean) -> Unit,
+    isFieldValid: Boolean,
+    errorMessage: String?
 ) {
-    val borderWidth by animateFloatAsState(
-        targetValue = if (isFocused) 2f else 1f,
-        label = "borderWidth"
-    )
+    val showErrorDisplay = errorMessage != null && !isFocused && value.isNotEmpty()
+
 
     Column {
         Text(
@@ -45,16 +45,28 @@ fun FormField(
                 .fillMaxWidth()
                 .onFocusChanged { onFocusChanged(it.isFocused) },
             colors = OutlinedTextFieldDefaults.colors(
-                focusedBorderColor = MaterialTheme.colorScheme.primary,
-                unfocusedBorderColor = MaterialTheme.colorScheme.outline,
+                focusedBorderColor = if (isFocused && isFieldValid && value.isNotEmpty()) MaterialTheme.colorScheme.tertiary /* Green */ else MaterialTheme.colorScheme.primary,
+                unfocusedBorderColor = if (showErrorDisplay) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.outline,
+                errorBorderColor = MaterialTheme.colorScheme.error, // Used by isError = true for other internal stylings
                 focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
                 unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
                 cursorColor = MaterialTheme.colorScheme.primary,
                 focusedTextColor = MaterialTheme.colorScheme.onBackground,
                 unfocusedTextColor = MaterialTheme.colorScheme.onBackground
             ),
+            singleLine = true,
             keyboardOptions = keyboardOptions,
-            shape = RoundedCornerShape(8.dp)
+            shape = RoundedCornerShape(8.dp),
+            isError = showErrorDisplay // Informs the TextField it's in an error state
         )
+
+        if (showErrorDisplay) {
+            Text(
+                text = errorMessage!!, // Safe due to showErrorDisplay condition
+                color = MaterialTheme.colorScheme.error,
+                style = MaterialTheme.typography.bodySmall,
+                modifier = Modifier.padding(start = 16.dp, top = 4.dp)
+            )
+        }
     }
 }
