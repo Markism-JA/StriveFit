@@ -1,4 +1,4 @@
- package com.marky.strivefit.data.local.entities.app
+package com.marky.strivefit.data.local.entities.app
 
 import androidx.room.Entity
 import androidx.room.ForeignKey

@@ -4,6 +4,7 @@ import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.PrimaryKey
 import com.marky.strivefit.data.local.entities.app.ChallengeEntity
+import java.util.Date
 
 @Entity(
     foreignKeys = [
@@ -16,10 +17,10 @@ import com.marky.strivefit.data.local.entities.app.ChallengeEntity
     ]
 )
 data class ActiveChallenge(
-    @PrimaryKey(autoGenerate = true) val id: Long = 0,
+    @PrimaryKey(autoGenerate = true) val id: Int = 0,
     val userId: String,
-    val challengeId: String,
-    val startDate: Long,
+    val challengeId: Int,
+    val startDate: Date,
     val currentProgress: Int = 0,
     val streakCount: Int = 0, // if applicable
     val isFailed: Boolean = false

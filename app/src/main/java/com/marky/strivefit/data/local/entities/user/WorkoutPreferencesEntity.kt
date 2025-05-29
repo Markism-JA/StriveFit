@@ -17,7 +17,7 @@ import java.time.LocalTime
         )
     ]
 )
-data class WorkoutPreferences(
+data class WorkoutPreferencesEntity(
     @PrimaryKey val userId: String,
     val daysPerWeek: Int, //2-7days
     val sessionDurationMinutes: Int, //15to90m

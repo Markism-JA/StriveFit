@@ -22,7 +22,7 @@ data class ExerciseEntity(
     val bodyPart: BodyParts,
     val equipment: Equipments,
     val targets: Targets,
-    val secondaryMuscles: SecondaryMuscles,
+    val secondaryMuscles: List<SecondaryMuscles>,
     val instructions: String,
     val exerciseType: ExerciseType
 )

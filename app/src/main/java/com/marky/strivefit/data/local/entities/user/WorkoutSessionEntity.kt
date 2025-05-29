@@ -41,7 +41,7 @@ data class WorkoutSessionEntity(
     var mood: Int?, //1-5 whether they like each exercise
     var perceivedExertion: Int?,
     var totalVolume: Float?, //total weight lifted sets x reps x weight
-    var totalCaloriesBurned: Int = 0,
+    var totalCaloriesBurned: Double = 0.0,
     var notes: String?,
     val createdAt: Date = Date(),
     var updatedAt: Date = Date()

@@ -30,7 +30,7 @@ import java.util.Date
         ),
         ForeignKey(
             entity = LoggedExerciseEntity::class,
-            parentColumns = ["localId"],
+            parentColumns = ["id"],
             childColumns = ["loggedExerciseId"],
             onDelete = ForeignKey.Companion.SET_NULL // Optional: preserve PR even if logged exercise is deleted
         )
