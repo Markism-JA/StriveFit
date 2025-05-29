@@ -1,9 +1,10 @@
-package com.marky.strivefit.data.local.entities
+package com.marky.strivefit.data.local.entities.app
 
 import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.Index
 import androidx.room.PrimaryKey
+import com.marky.strivefit.data.local.entities.user.WorkoutPlanEntity
 
 @Entity(
     tableName = "workout_plan_exercises",

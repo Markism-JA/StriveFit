@@ -1,9 +1,11 @@
-package com.marky.strivefit.data.local.entities
+package com.marky.strivefit.data.local.entities.user
 
 import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.Index
 import androidx.room.PrimaryKey
+import com.marky.strivefit.data.local.entities.user.UserDataEntity
+import com.marky.strivefit.data.local.entities.user.WorkoutPlanEntity
 import com.marky.strivefit.data.values.WorkoutSessionStatus
 import java.util.Date
 

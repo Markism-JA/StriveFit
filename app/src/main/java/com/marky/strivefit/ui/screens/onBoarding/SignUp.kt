@@ -27,7 +27,11 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CheckboxDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.SnackbarDuration
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.windowsizeclass.WindowHeightSizeClass
 import androidx.compose.material3.windowsizeclass.WindowSizeClass
@@ -55,6 +59,7 @@ import com.marky.strivefit.ui.components.PasswordField
 import com.marky.strivefit.ui.components.PasswordFieldRequirementStatus
 import com.marky.strivefit.ui.utilities.calculateWindowHeightSizeClass
 import com.marky.strivefit.ui.utilities.calculateWindowWidthSizeClass
+import com.marky.strivefit.ui.viewModel.AuthUiState
 import com.marky.strivefit.ui.viewModel.AuthViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -62,18 +67,18 @@ import kotlinx.coroutines.launch
 
 const val PASSWORD_VISIBLE_DURATION_MS = 3000L // 3 seconds
 const val MAX_PASSWORD_LENGTH = 64
- const val MAX_FULL_NAME_LENGTH = 100
- const val MAX_EMAIL_LENGTH = 254
+const val MAX_FULL_NAME_LENGTH = 100
+const val MAX_EMAIL_LENGTH = 254
 
 @Composable
 fun SignUp(
     viewModel: AuthViewModel = hiltViewModel(),
     windowSizeClass: WindowSizeClass? = null,
     onBackClick: () -> Unit = {},
-    onSignUpClick: () -> Unit = {},
-    onGoogleSignUpClick: () -> Unit = {}
+    onSignUpSuccess: () -> Unit = {},
+    onInitiateGoogleSignUp: () -> Unit = {} // Called to start the Google sign-up flow
 ) {
-    val state = viewModel.authState.collectAsState()
+    val authStateValue by viewModel.authState.collectAsState()
     val configuration = LocalConfiguration.current
     val screenWidth = configuration.screenWidthDp.dp
     val screenHeight = configuration.screenHeightDp.dp
@@ -107,7 +112,6 @@ fun SignUp(
     var isPasswordFocused by remember { mutableStateOf(false) }
     var isConfirmPasswordFocused by remember { mutableStateOf(false) }
 
-    // Validity states for green border success indication
     var isFullNameActuallyValid by remember(fullName) { mutableStateOf(isValidFullName(fullName)) }
     var isEmailActuallyValid by remember(email) { mutableStateOf(isValidEmail(email)) }
 
@@ -119,14 +123,14 @@ fun SignUp(
     } else null
 
     val scope = rememberCoroutineScope()
+    val snackbarHostState = remember { SnackbarHostState() }
     var passwordVisibilityJob by remember { mutableStateOf<Job?>(null) }
     var confirmPasswordVisibilityJob by remember { mutableStateOf<Job?>(null) }
 
     var isVisible by remember { mutableStateOf(false) }
     val scrollState = rememberScrollState()
-
-    // State for managing the legal content dialog
     var showLegalDialog by remember { mutableStateOf<LegalContentType?>(null) }
+    var isLoading by remember { mutableStateOf(false) }
 
     val isPasswordStrongEnough = remember(password) {
         hasMinLength(password) && hasUppercase(password) && hasLowercase(password) && hasDigit(password) && hasSpecialChar(password)
@@ -145,8 +149,35 @@ fun SignUp(
         isVisible = true
     }
 
+    LaunchedEffect(authStateValue) {
+        when (val state = authStateValue) {
+            is AuthUiState.Loading -> {
+                isLoading = true
+            }
+            is AuthUiState.Success -> {
+                isLoading = false
+                onSignUpSuccess() // Navigate on success
+                viewModel.resetAuthStateToIdle()
+            }
+            is AuthUiState.Error -> {
+                isLoading = false
+                scope.launch {
+                    snackbarHostState.showSnackbar(
+                        message = state.message,
+                        duration = SnackbarDuration.Long // Show error for a bit longer
+                    )
+                }
+                viewModel.resetAuthStateToIdle()
+            }
+            is AuthUiState.Idle -> {
+                isLoading = false // Ensure loading is false if state resets to Idle
+            }
+        }
+    }
+
+
     val onTogglePasswordVisibilityLambda = {
-        passwordVisibilityJob?.cancel() // Cancel any existing hide timer
+        passwordVisibilityJob?.cancel()
         if (!isPasswordVisible) {
             isPasswordVisible = true
             passwordVisibilityJob = scope.launch {
@@ -159,7 +190,7 @@ fun SignUp(
     }
 
     val onToggleConfirmPasswordVisibilityLambda = {
-        confirmPasswordVisibilityJob?.cancel() // Cancel any existing hide timer
+        confirmPasswordVisibilityJob?.cancel()
         if (!isConfirmPasswordVisible) {
             isConfirmPasswordVisible = true
             confirmPasswordVisibilityJob = scope.launch {
@@ -177,137 +208,180 @@ fun SignUp(
         null
     }
 
+    val performEmailSignUp = {
+        if (canEnableSignUpButton) { // Ensure form is valid before attempting
+            viewModel.signUpWithEmail(email.trim(), password, fullName.trim())
+        }
+    }
+
+    val actualEmailSignUpButtonEnabled = canEnableSignUpButton && !isLoading
+    val generalActionsEnabled = !isLoading
+
+
     Box(
         modifier = Modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
+    ) {
+        Column(modifier = Modifier
+            .fillMaxSize()
             .padding(16.dp)
             .padding(top = 20.dp)
             .padding(start = paddingStart, end = 5.dp)
-    ) {
-        AnimatedVisibility(
-            visible = isVisible,
-            enter = fadeIn(tween(500)) + slideInVertically(
-                initialOffsetY = { it / 2 },
-                animationSpec = tween(500)
-            ),
-            exit = fadeOut(tween(300)) + slideOutVertically(targetOffsetY = {it/2}, animationSpec = tween(300))
         ) {
-            when {
-                isLandscape -> {
-                    SignUpLandscapeLayout(
-                        fullName = fullName,
-                        onFullNameChange = {
-                            if (it.length <= MAX_FULL_NAME_LENGTH) fullName = it
-                            isFullNameActuallyValid = isValidFullName(it)
-                        },
-                        isFullNameFocused = isFullNameFocused,
-                        onFullNameFocusChanged = { isFullNameFocused = it },
-                        email = email,
-                        onEmailChange = {
-                           if (it.length <= MAX_EMAIL_LENGTH) email = it
-                            isEmailActuallyValid = isValidEmail(it)
-                        },
-                        isEmailFocused = isEmailFocused,
-                        onEmailFocusChanged = { isEmailFocused = it },
-                        password = password,
-                        onPasswordChange = {
-                            if (it.length <= MAX_PASSWORD_LENGTH) password = it
-                        },
-                        isPasswordVisible = isPasswordVisible,
-                        onTogglePasswordVisibility = onTogglePasswordVisibilityLambda,
-                        onToggleConfirmPasswordVisibility = onToggleConfirmPasswordVisibilityLambda,
-                        isPasswordFocused = isPasswordFocused,
-                        onPasswordFocusChanged = { isPasswordFocused = it },
-                        confirmPassword = confirmPassword,
-                        onConfirmPasswordChange = {
-                            if (it.length <= MAX_PASSWORD_LENGTH) confirmPassword = it
-                        },
-                        isConfirmPasswordVisible = isConfirmPasswordVisible,
-                        isConfirmPasswordFocused = isConfirmPasswordFocused,
-                        onConfirmPasswordFocusChanged = { isConfirmPasswordFocused = it },
-                        isTermsAccepted = isTermsAccepted,
-                        onTermsAcceptedChange = { isTermsAccepted = it },
-                        heightSizeClass = heightSizeClass,
-                        onBackClick = {
-                            scope.launch {
-                                isVisible = false
-                                delay(300)
-                                onBackClick()
-                            }
-                        },
-                        onSignUpClick = onSignUpClick,
-                        onGoogleSignUpClick = onGoogleSignUpClick,
-                        onTermsClick = { showLegalDialog = LegalContentType.TERMS_OF_SERVICE },
-                        onPrivacyClick = { showLegalDialog = LegalContentType.PRIVACY_POLICY },
-                        scrollState = scrollState,
-                        isSignUpEnabled = canEnableSignUpButton,
-                        isFullNameActuallyValid = isFullNameActuallyValid,
-                        fullNameErrorMessage = fullNameErrorMessage,
-                        isEmailActuallyValid = isEmailActuallyValid,
-                        emailErrorMessage = emailErrorMessage,
-                        confirmPasswordErrorMessage = confirmPasswordErrorMessage
-                    )
-                }
-                else -> {
-                    SignUpPortraitLayout(
-                        fullName = fullName,
-                        onFullNameChange = {
-                            if (it.length <= MAX_FULL_NAME_LENGTH) fullName = it
-                            isFullNameActuallyValid = isValidFullName(it)
-                        },
-                        isFullNameFocused = isFullNameFocused,
-                        onFullNameFocusChanged = { isFullNameFocused = it },
-                        email = email,
-                        onEmailChange = {
-                            if (it.length <= MAX_EMAIL_LENGTH) email = it
-                            isEmailActuallyValid = isValidEmail(it)
-                        },
-                        isEmailFocused = isEmailFocused,
-                        onEmailFocusChanged = { isEmailFocused = it },
-                        password = password,
-                        onPasswordChange = { password = it },
-                        isPasswordVisible = isPasswordVisible,
-                        onTogglePasswordVisibility = onTogglePasswordVisibilityLambda,
-                        isPasswordFocused = isPasswordFocused,
-                        onPasswordFocusChanged = { isPasswordFocused = it },
-                        confirmPassword = confirmPassword,
-                        onConfirmPasswordChange = { confirmPassword = it },
-                        isConfirmPasswordVisible = isConfirmPasswordVisible,
-                        onToggleConfirmPasswordVisibility = onToggleConfirmPasswordVisibilityLambda,
-                        isConfirmPasswordFocused = isConfirmPasswordFocused,
-                        onConfirmPasswordFocusChanged = { isConfirmPasswordFocused = it },
-                        isTermsAccepted = isTermsAccepted,
-                        onTermsAcceptedChange = { isTermsAccepted = it },
-                        heightSizeClass = heightSizeClass,
-                        onBackClick = {
-                            scope.launch {
-                                isVisible = false
-                                delay(300)
-                                onBackClick()
-                            }
-                        },
-                        onSignUpClick = onSignUpClick,
-                        onGoogleSignUpClick = onGoogleSignUpClick,
-                        onTermsClick = { showLegalDialog = LegalContentType.TERMS_OF_SERVICE },
-                        onPrivacyClick = { showLegalDialog = LegalContentType.PRIVACY_POLICY },
-                        scrollState = scrollState,
-                        isSignUpEnabled = canEnableSignUpButton,
-                        isFullNameActuallyValid = isFullNameActuallyValid,
-                        fullNameErrorMessage = fullNameErrorMessage,
-                        isEmailActuallyValid = isEmailActuallyValid,
-                        emailErrorMessage = emailErrorMessage,
-                        confirmPasswordErrorMessage = confirmPasswordErrorMessage
-                    )
+            AnimatedVisibility(
+                visible = isVisible,
+                enter = fadeIn(tween(500)) + slideInVertically(
+                    initialOffsetY = { it / 2 },
+                    animationSpec = tween(500)
+                ),
+                exit = fadeOut(tween(300)) + slideOutVertically(targetOffsetY = {it/2}, animationSpec = tween(300))
+            ) {
+                when {
+                    isLandscape -> {
+                        SignUpLandscapeLayout(
+                            fullName = fullName,
+                            onFullNameChange = {
+                                if (it.length <= MAX_FULL_NAME_LENGTH) fullName = it
+                                isFullNameActuallyValid = isValidFullName(it)
+                            },
+                            isFullNameFocused = isFullNameFocused,
+                            onFullNameFocusChanged = { isFullNameFocused = it },
+                            email = email,
+                            onEmailChange = {
+                                if (it.length <= MAX_EMAIL_LENGTH) email = it
+                                isEmailActuallyValid = isValidEmail(it)
+                            },
+                            isEmailFocused = isEmailFocused,
+                            onEmailFocusChanged = { isEmailFocused = it },
+                            password = password,
+                            onPasswordChange = {
+                                if (it.length <= MAX_PASSWORD_LENGTH) password = it
+                            },
+                            isPasswordVisible = isPasswordVisible,
+                            onTogglePasswordVisibility = onTogglePasswordVisibilityLambda,
+                            onToggleConfirmPasswordVisibility = onToggleConfirmPasswordVisibilityLambda,
+                            isPasswordFocused = isPasswordFocused,
+                            onPasswordFocusChanged = { isPasswordFocused = it },
+                            confirmPassword = confirmPassword,
+                            onConfirmPasswordChange = {
+                                if (it.length <= MAX_PASSWORD_LENGTH) confirmPassword = it
+                            },
+                            isConfirmPasswordVisible = isConfirmPasswordVisible,
+                            isConfirmPasswordFocused = isConfirmPasswordFocused,
+                            onConfirmPasswordFocusChanged = { isConfirmPasswordFocused = it },
+                            isTermsAccepted = isTermsAccepted,
+                            onTermsAcceptedChange = { if (!isLoading) isTermsAccepted = it },
+                            heightSizeClass = heightSizeClass,
+                            onBackClick ={
+                                scope.launch {
+                                    isVisible = false
+                                    delay(300)
+                                    onBackClick()
+                                }
+                            },
+                            onSignUpClick = performEmailSignUp,
+                            onGoogleSignUpClick = { if (!isLoading) onInitiateGoogleSignUp() },
+                            onTermsClick = { if (!isLoading) showLegalDialog = LegalContentType.TERMS_OF_SERVICE },
+                            onPrivacyClick = { if (!isLoading) showLegalDialog = LegalContentType.PRIVACY_POLICY },
+                            scrollState = scrollState,
+                            isEmailSignUpEnabled = actualEmailSignUpButtonEnabled,
+                            areGeneralActionsEnabled = generalActionsEnabled,
+                            isFullNameActuallyValid = isFullNameActuallyValid,
+                            fullNameErrorMessage = fullNameErrorMessage,
+                            isEmailActuallyValid = isEmailActuallyValid,
+                            emailErrorMessage = emailErrorMessage,
+                            confirmPasswordErrorMessage = confirmPasswordErrorMessage
+                        )
+                    }
+                    else -> {
+                        SignUpPortraitLayout(
+                            fullName = fullName,
+                            onFullNameChange = {
+                                if (it.length <= MAX_FULL_NAME_LENGTH) fullName = it
+                                isFullNameActuallyValid = isValidFullName(it)
+                            },
+                            isFullNameFocused = isFullNameFocused,
+                            onFullNameFocusChanged = { isFullNameFocused = it },
+                            email = email,
+                            onEmailChange = {
+                                if (it.length <= MAX_EMAIL_LENGTH) email = it
+                                isEmailActuallyValid = isValidEmail(it)
+                            },
+                            isEmailFocused = isEmailFocused,
+                            onEmailFocusChanged = { isEmailFocused = it },
+                            password = password,
+                            onPasswordChange = {
+                                if (it.length <= MAX_PASSWORD_LENGTH) password = it
+                            },
+                            isPasswordVisible = isPasswordVisible,
+                            onTogglePasswordVisibility = onTogglePasswordVisibilityLambda,
+                            isPasswordFocused = isPasswordFocused,
+                            onPasswordFocusChanged = { isPasswordFocused = it },
+                            confirmPassword = confirmPassword,
+                            onConfirmPasswordChange = {
+                                if (it.length <= MAX_PASSWORD_LENGTH) confirmPassword = it
+                            },
+                            isConfirmPasswordVisible = isConfirmPasswordVisible,
+                            onToggleConfirmPasswordVisibility = onToggleConfirmPasswordVisibilityLambda,
+                            isConfirmPasswordFocused = isConfirmPasswordFocused,
+                            onConfirmPasswordFocusChanged = { isConfirmPasswordFocused = it },
+                            isTermsAccepted = isTermsAccepted,
+                            onTermsAcceptedChange = { if (!isLoading) isTermsAccepted = it },
+                            heightSizeClass = heightSizeClass,
+                            onBackClick ={
+                                scope.launch {
+                                    isVisible = false
+                                    delay(300)
+                                    onBackClick()
+                                }
+                            },
+                            onSignUpClick = performEmailSignUp,
+                            onGoogleSignUpClick = { if (!isLoading) onInitiateGoogleSignUp() },
+                            onTermsClick = { if (!isLoading) showLegalDialog = LegalContentType.TERMS_OF_SERVICE },
+                            onPrivacyClick = { if (!isLoading) showLegalDialog = LegalContentType.PRIVACY_POLICY },
+                            scrollState = scrollState,
+                            isEmailSignUpEnabled = actualEmailSignUpButtonEnabled,
+                            areGeneralActionsEnabled = generalActionsEnabled,
+                            isFullNameActuallyValid = isFullNameActuallyValid,
+                            fullNameErrorMessage = fullNameErrorMessage,
+                            isEmailActuallyValid = isEmailActuallyValid,
+                            emailErrorMessage = emailErrorMessage,
+                            confirmPasswordErrorMessage = confirmPasswordErrorMessage
+                        )
+                    }
                 }
             }
         }
-        showLegalDialog?.let { type ->
-            LegalContentDialog(
-                type = type,
-                onDismiss = { showLegalDialog = null },
-                isLandscape = isLandscape
-            )
+
+        // Loading Overlay
+        if (isLoading) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(MaterialTheme.colorScheme.background.copy(alpha = 0.7f)) // Semi-transparent overlay
+                    .clickable(enabled = false, onClick = {}), // Consume clicks
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
+            }
+        }
+
+        // Snackbar Host
+        SnackbarHost(
+            hostState = snackbarHostState,
+            modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 16.dp)
+        )
+
+        // Legal Dialog (conditionally shown on top of everything else if not loading)
+        if (!isLoading) {
+            showLegalDialog?.let { type ->
+                LegalContentDialog(
+                    type = type,
+                    onDismiss = { showLegalDialog = null },
+                    isLandscape = isLandscape
+                )
+            }
         }
     }
 }
@@ -342,13 +416,14 @@ private fun SignUpPortraitLayout(
     onGoogleSignUpClick: () -> Unit,
     onTermsClick: () -> Unit,
     onPrivacyClick: () -> Unit,
-    isSignUpEnabled: Boolean,
+    isEmailSignUpEnabled: Boolean,
+    areGeneralActionsEnabled: Boolean,
     scrollState: ScrollState,
     isFullNameActuallyValid: Boolean,
     fullNameErrorMessage: String?,
     isEmailActuallyValid: Boolean,
     emailErrorMessage: String?,
-    confirmPasswordErrorMessage: String?, // New
+    confirmPasswordErrorMessage: String?,
 ) {
     val verticalSpacing = when (heightSizeClass) {
         WindowHeightSizeClass.Expanded -> 16.dp
@@ -382,7 +457,7 @@ private fun SignUpPortraitLayout(
         ) {
             GoBackButton(
                 onClick = onBackClick,
-                modifier = Modifier.align(Alignment.CenterStart)
+                modifier = Modifier.align(Alignment.CenterStart),
             )
 
             Text(
@@ -402,7 +477,7 @@ private fun SignUpPortraitLayout(
             isFocused = isFullNameFocused,
             onFocusChanged = onFullNameFocusChanged,
             isFieldValid = isFullNameActuallyValid,
-            errorMessage = fullNameErrorMessage
+            errorMessage = fullNameErrorMessage,
         )
 
         Spacer(modifier = Modifier.height(verticalSpacing))
@@ -415,7 +490,7 @@ private fun SignUpPortraitLayout(
             isFocused = isEmailFocused,
             onFocusChanged = onEmailFocusChanged,
             isFieldValid = isEmailActuallyValid,
-            errorMessage = emailErrorMessage
+            errorMessage = emailErrorMessage,
         )
 
         Spacer(modifier = Modifier.height(verticalSpacing))
@@ -429,7 +504,7 @@ private fun SignUpPortraitLayout(
             isFocused = isPasswordFocused,
             onFocusChanged = onPasswordFocusChanged,
             passwordRequirements = passwordRequirementsList,
-            errorMessage = null
+            errorMessage = null,
         )
 
         Spacer(modifier = Modifier.height(verticalSpacing))
@@ -442,7 +517,7 @@ private fun SignUpPortraitLayout(
             onTogglePasswordVisibility = onToggleConfirmPasswordVisibility,
             isFocused = isConfirmPasswordFocused,
             onFocusChanged = onConfirmPasswordFocusChanged,
-            errorMessage = confirmPasswordErrorMessage
+            errorMessage = confirmPasswordErrorMessage,
         )
 
         Spacer(modifier = Modifier.height(verticalSpacing))
@@ -451,7 +526,8 @@ private fun SignUpPortraitLayout(
             isChecked = isTermsAccepted,
             onCheckedChange = onTermsAcceptedChange,
             onTermsClick = onTermsClick,
-            onPrivacyClick = onPrivacyClick
+            onPrivacyClick = onPrivacyClick,
+            enabled = areGeneralActionsEnabled
         )
 
         Spacer(modifier = Modifier.height(verticalSpacing * 1.5f))
@@ -462,7 +538,7 @@ private fun SignUpPortraitLayout(
             backgroundColor = MaterialTheme.colorScheme.primary,
             textColor = MaterialTheme.colorScheme.onPrimary,
             modifier = Modifier.fillMaxWidth(),
-            enabled = isSignUpEnabled
+            enabled = isEmailSignUpEnabled // Specific enabled state for this button
         )
 
 
@@ -473,7 +549,7 @@ private fun SignUpPortraitLayout(
             textColor = MaterialTheme.colorScheme.onBackground,
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(vertical = verticalSpacing)
+                .padding(vertical = verticalSpacing),
         )
     }
 }
@@ -509,7 +585,8 @@ private fun SignUpLandscapeLayout(
     onTermsClick: () -> Unit,
     onPrivacyClick: () -> Unit,
     scrollState: ScrollState,
-    isSignUpEnabled: Boolean,
+    isEmailSignUpEnabled: Boolean,
+    areGeneralActionsEnabled: Boolean,
     isFullNameActuallyValid: Boolean,
     fullNameErrorMessage: String?,
     isEmailActuallyValid: Boolean,
@@ -550,7 +627,7 @@ private fun SignUpLandscapeLayout(
         ) {
             GoBackButton(
                 onClick = onBackClick,
-                modifier = Modifier.align(Alignment.CenterStart)
+                modifier = Modifier.align(Alignment.CenterStart),
             )
 
             Text(
@@ -578,7 +655,7 @@ private fun SignUpLandscapeLayout(
                     isFocused = isFullNameFocused,
                     onFocusChanged = onFullNameFocusChanged,
                     isFieldValid = isFullNameActuallyValid,
-                    errorMessage = fullNameErrorMessage
+                    errorMessage = fullNameErrorMessage,
                 )
 
                 FormField(
@@ -589,7 +666,7 @@ private fun SignUpLandscapeLayout(
                     isFocused = isEmailFocused,
                     onFocusChanged = onEmailFocusChanged,
                     isFieldValid = isEmailActuallyValid,
-                    errorMessage = emailErrorMessage
+                    errorMessage = emailErrorMessage,
                 )
             }
 
@@ -610,7 +687,7 @@ private fun SignUpLandscapeLayout(
                     isFocused = isPasswordFocused,
                     onFocusChanged = onPasswordFocusChanged,
                     passwordRequirements = passwordRequirementsList,
-                    errorMessage = null
+                    errorMessage = null,
                 )
 
                 PasswordField(
@@ -625,7 +702,7 @@ private fun SignUpLandscapeLayout(
                     isPasswordVisible = isConfirmPasswordVisible,
                     isFocused = isConfirmPasswordFocused,
                     onFocusChanged = onConfirmPasswordFocusChanged,
-                    errorMessage = confirmPasswordErrorMessage
+                    errorMessage = confirmPasswordErrorMessage,
                 )
             }
         }
@@ -637,7 +714,8 @@ private fun SignUpLandscapeLayout(
             onCheckedChange = onTermsAcceptedChange,
             onTermsClick = onTermsClick,
             onPrivacyClick = onPrivacyClick,
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth(),
+            enabled = areGeneralActionsEnabled
         )
 
         Spacer(modifier = Modifier.height(verticalSpacing * 1.5f))
@@ -657,7 +735,7 @@ private fun SignUpLandscapeLayout(
                     backgroundColor = MaterialTheme.colorScheme.primary,
                     textColor = MaterialTheme.colorScheme.onPrimary,
                     modifier = Modifier.fillMaxWidth(),
-                    enabled = isSignUpEnabled
+                    enabled = isEmailSignUpEnabled
                 )
             }
 
@@ -671,7 +749,7 @@ private fun SignUpLandscapeLayout(
                     text = "Continue with Google",
                     backgroundColor = MaterialTheme.colorScheme.surfaceVariant,
                     textColor = MaterialTheme.colorScheme.onBackground,
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth(),
                 )
             }
         }
@@ -684,11 +762,14 @@ private fun TermsAndConditionsCheckbox(
     onCheckedChange: (Boolean) -> Unit,
     onTermsClick: () -> Unit,
     onPrivacyClick: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    enabled: Boolean // Added enabled parameter
 ) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
-        modifier = modifier.padding(vertical = 8.dp)
+        modifier = modifier
+            .padding(vertical = 8.dp)
+            .clickable(enabled = enabled, onClick = { onCheckedChange(!isChecked) }) // Make row clickable to toggle
     ) {
         Checkbox(
             checked = isChecked,
@@ -698,32 +779,33 @@ private fun TermsAndConditionsCheckbox(
                 uncheckedColor = MaterialTheme.colorScheme.outline,
                 checkmarkColor = MaterialTheme.colorScheme.onPrimary
             ),
-            modifier = Modifier.size(24.dp)
+            modifier = Modifier.size(24.dp),
+            enabled = enabled // Apply enabled to Checkbox
         )
         Spacer(modifier = Modifier.width(8.dp))
         Text(
             text = "I agree to the ",
             style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onBackground
+            color = if (enabled) MaterialTheme.colorScheme.onBackground else MaterialTheme.colorScheme.onBackground.copy(alpha = 0.38f)
         )
         Text(
             text = "Terms of Service",
             style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.primary,
+            color = if (enabled) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.primary.copy(alpha = 0.38f),
             textDecoration = TextDecoration.Underline,
-            modifier = Modifier.clickable { onTermsClick() }
+            modifier = Modifier.clickable(enabled = enabled) { onTermsClick() }
         )
         Text(
             text = " & ",
             style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onBackground
+            color = if (enabled) MaterialTheme.colorScheme.onBackground else MaterialTheme.colorScheme.onBackground.copy(alpha = 0.38f)
         )
         Text(
             text = "Privacy Policy",
             style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.primary,
+            color = if (enabled) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.primary.copy(alpha = 0.38f),
             textDecoration = TextDecoration.Underline,
-            modifier = Modifier.clickable { onPrivacyClick() }
+            modifier = Modifier.clickable(enabled = enabled) { onPrivacyClick() }
         )
     }
 }
@@ -734,7 +816,7 @@ fun isValidFullName(fullName: String): Boolean {
 }
 
 fun isValidEmail(email: String): Boolean {
-    return Patterns.EMAIL_ADDRESS.matcher(email).matches() && email.length <= 254 //Email is valid
+    return Patterns.EMAIL_ADDRESS.matcher(email.trim()).matches() && email.trim().length <= 254
 }
 
 //password

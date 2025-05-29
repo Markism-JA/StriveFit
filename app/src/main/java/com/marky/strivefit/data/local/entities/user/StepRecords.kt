@@ -1,4 +1,4 @@
-package com.marky.strivefit.data.local.entities
+package com.marky.strivefit.data.local.entities.user
 
 import androidx.room.ColumnInfo
 import androidx.room.Entity

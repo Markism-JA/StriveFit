@@ -9,6 +9,7 @@ import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
@@ -38,13 +39,16 @@ import com.marky.strivefit.ui.viewModel.AuthViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
+// Assuming MAX_PASSWORD_LENGTH is defined elsewhere, e.g., in SignUp.kt or a constants file
+// If not, define it: const val MAX_PASSWORD_LENGTH = 64
+
 @Composable
 fun Login(
     windowSizeClass: WindowSizeClass? = null,
     authViewModel: AuthViewModel = hiltViewModel(),
     onBackClick: () -> Unit = {},
-    onSuccessfulLogin: () -> Unit = {}, // Callback for successful login
-    onGoogleLoginClick: () -> Unit = {},
+    onSuccessfulLogin: () -> Unit = {},
+    onGoogleLoginClick: () -> Unit = {}, // This should initiate the Google Sign-In flow
     onForgotPasswordClick: () -> Unit = {},
     onSignupClick: () -> Unit = {}
 ) {
@@ -72,24 +76,26 @@ fun Login(
 
     var loginError by remember { mutableStateOf<String?>(null) }
     val authStateValue by authViewModel.authState.collectAsState()
+    var isLoading by remember { mutableStateOf(false) }
 
     LaunchedEffect(authStateValue) {
         when (val state = authStateValue) {
-            is AuthUiState.Success -> {
-                loginError = null
-                onSuccessfulLogin()
-                authViewModel.resetAuthStateToIdle()
-            }
-            is AuthUiState.Error -> {
-                loginError = state.message
-                // ViewModel will be reset to Idle if user types or on next attempt
-            }
-            AuthUiState.Loading -> {
+            is AuthUiState.Loading -> {
+                isLoading = true
                 loginError = null // Clear error when loading
             }
-            AuthUiState.Idle -> {
-                // Can also clear loginError here if it wasn't cleared by typing
-                // if (loginError != null) loginError = null
+            is AuthUiState.Success -> {
+                isLoading = false
+                loginError = null
+                onSuccessfulLogin()
+                authViewModel.resetAuthStateToIdle() // Reset after navigation
+            }
+            is AuthUiState.Error -> {
+                isLoading = false
+                loginError = state.message
+            }
+            is AuthUiState.Idle -> {
+                isLoading = false
             }
         }
     }
@@ -101,39 +107,43 @@ fun Login(
     LaunchedEffect(Unit) { isVisible = true }
 
     val isEmailFormatValid = remember(email) { Patterns.EMAIL_ADDRESS.matcher(email.trim()).matches() }
-    val canAttemptLogin = email.isNotBlank() && password.isNotBlank() // Simpler check for button enablement
+    val canAttemptLogin = email.isNotBlank() && password.isNotBlank()
 
-    val onLoginClickedAction = {
-        when {
-            email.isBlank() || password.isBlank() -> {
-                loginError = "Email and password cannot be empty."
-            }
-
-            !isEmailFormatValid -> {
-                loginError = "Please enter a valid email format."
-            }
-
-            else -> {
-                authViewModel.signInWithEmailAndPassword(email.trim(), password)
+    val performLoginAction = {
+        if (!isLoading) { // Check if not loading before proceeding
+            when {
+                email.isBlank() || password.isBlank() -> {
+                    loginError = "Email and password cannot be empty."
+                }
+                !isEmailFormatValid && email.isNotEmpty() -> {
+                    loginError = "Please enter a valid email format."
+                }
+                else -> {
+                    authViewModel.signInWithEmailAndPassword(email.trim(), password)
+                }
             }
         }
+        // If isLoading is true, this lambda executes but the 'if' condition prevents main logic.
     }
 
-    LaunchedEffect(email, password) { // Clear general error when user types
+    LaunchedEffect(email, password) {
         if (loginError != null) {
             loginError = null
-            if (authStateValue is AuthUiState.Error) {
-                authViewModel.resetAuthStateToIdle()
-            }
+        }
+        if (authStateValue is AuthUiState.Error) {
+            authViewModel.resetAuthStateToIdle()
         }
     }
 
     val animatedOnBackClick = {
-        scope.launch {
-            isVisible = false
-            delay(300)
-            onBackClick()
+        if (!isLoading) { // Check if not loading before proceeding
+            scope.launch {
+                isVisible = false
+                delay(300) // Wait for exit animation
+                onBackClick()
+            }
         }
+        // If isLoading is true, this lambda executes but the 'if' condition prevents main logic.
     }
 
     val verticalSpacing = when (heightSizeClass) {
@@ -142,70 +152,93 @@ fun Login(
         else -> 8.dp
     }
 
+    val areActionsEnabled = !isLoading
+
+
     Box(
         modifier = Modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
-            .padding(16.dp)
-            .padding(top = 20.dp)
-            .padding(start = paddingStart, end = 5.dp)
     ) {
-        AnimatedVisibility(
-            visible = isVisible,
-            enter = fadeIn(tween(500)) + slideInVertically(
-                initialOffsetY = { it / 2 },
-                animationSpec = tween(500)
-            ),
-            exit = fadeOut(tween(300)) + slideOutVertically(targetOffsetY = { it / 2 }, animationSpec = tween(300))
+        Column( // Main content column
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(16.dp)
+                .padding(top = 20.dp)
+                .padding(start = paddingStart, end = 5.dp)
         ) {
-            if (isLandscape) {
-                LoginLandscapeLayout(
-                    email = email,
-                    onEmailChange = { email = it },
-                    isEmailFocused = isEmailFocused,
-                    onEmailFocusChanged = { isEmailFocused = it },
-                    isEmailFormatValid = isEmailFormatValid,
-                    password = password,
-                    onPasswordChange = { if (it.length <= MAX_PASSWORD_LENGTH) password = it },
-                    isPasswordVisible = isPasswordVisible,
-                    onTogglePasswordVisibility = { isPasswordVisible = !isPasswordVisible },
-                    isPasswordFocused = isPasswordFocused,
-                    onPasswordFocusChanged = { isPasswordFocused = it },
-                    onBackClick = onBackClick,
-                    onLoginClick = onLoginClickedAction,
-                    onGoogleLoginClick = onGoogleLoginClick,
-                    onForgotPasswordClick = onForgotPasswordClick,
-                    onSignupClick = onSignupClick,
-                    scrollState = scrollState,
-                    verticalSpacing = verticalSpacing,
-                    loginError = loginError,
-                    isLoading = authStateValue is AuthUiState.Loading,
-                    canAttemptLogin = canAttemptLogin
-                )
-            } else {
-                LoginPortraitLayout(
-                    email = email,
-                    onEmailChange = { email = it },
-                    isEmailFocused = isEmailFocused,
-                    onEmailFocusChanged = { isEmailFocused = it },
-                    isEmailFormatValid = isEmailFormatValid,
-                    password = password,
-                    onPasswordChange = { if (it.length <= MAX_PASSWORD_LENGTH) password = it },
-                    isPasswordVisible = isPasswordVisible,
-                    onTogglePasswordVisibility = { isPasswordVisible = !isPasswordVisible },
-                    isPasswordFocused = isPasswordFocused,
-                    onPasswordFocusChanged = { isPasswordFocused = it },
-                    onBackClick = onBackClick,
-                    onLoginClick = onLoginClickedAction,
-                    onGoogleLoginClick = onGoogleLoginClick,
-                    onForgotPasswordClick = onForgotPasswordClick,
-                    onSignupClick = onSignupClick,
-                    scrollState = scrollState,
-                    verticalSpacing = verticalSpacing,
-                    loginError = loginError,
-                    isLoading = authStateValue is AuthUiState.Loading,
-                    canAttemptLogin = canAttemptLogin
-                )
+            AnimatedVisibility(
+                visible = isVisible,
+                enter = fadeIn(tween(500)) + slideInVertically(
+                    initialOffsetY = { it / 2 },
+                    animationSpec = tween(500)
+                ),
+                exit = fadeOut(tween(300)) + slideOutVertically(targetOffsetY = { it / 2 }, animationSpec = tween(300))
+            ) {
+                if (isLandscape) {
+                    LoginLandscapeLayout(
+                        email = email,
+                        onEmailChange = { email = it },
+                        isEmailFocused = isEmailFocused,
+                        onEmailFocusChanged = { isEmailFocused = it },
+                        isEmailFormatValid = isEmailFormatValid,
+                        password = password,
+                        onPasswordChange = { if (it.length <= MAX_PASSWORD_LENGTH) password = it },
+                        isPasswordVisible = isPasswordVisible,
+                        onTogglePasswordVisibility = { isPasswordVisible = !isPasswordVisible },
+                        isPasswordFocused = isPasswordFocused,
+                        onPasswordFocusChanged = { isPasswordFocused = it },
+                        onBackClick = animatedOnBackClick,
+                        onLoginClick = performLoginAction,
+                        onGoogleLoginClick = { if (areActionsEnabled) onGoogleLoginClick() },
+                        onForgotPasswordClick = { if (areActionsEnabled) onForgotPasswordClick() },
+                        onSignupClick = { if (areActionsEnabled) onSignupClick() },
+                        scrollState = scrollState,
+                        verticalSpacing = verticalSpacing,
+                        loginError = loginError,
+                        isLoading = isLoading,
+                        canAttemptLogin = canAttemptLogin,
+                        areActionsEnabled = areActionsEnabled
+                    )
+                } else {
+                    LoginPortraitLayout(
+                        email = email,
+                        onEmailChange = { email = it },
+                        isEmailFocused = isEmailFocused,
+                        onEmailFocusChanged = { isEmailFocused = it },
+                        isEmailFormatValid = isEmailFormatValid,
+                        password = password,
+                        onPasswordChange = { if (it.length <= MAX_PASSWORD_LENGTH) password = it },
+                        isPasswordVisible = isPasswordVisible,
+                        onTogglePasswordVisibility = { isPasswordVisible = !isPasswordVisible },
+                        isPasswordFocused = isPasswordFocused,
+                        onPasswordFocusChanged = { isPasswordFocused = it },
+                        onBackClick = animatedOnBackClick,
+                        onLoginClick = performLoginAction,
+                        onGoogleLoginClick = { if (areActionsEnabled) onGoogleLoginClick() },
+                        onForgotPasswordClick = { if (areActionsEnabled) onForgotPasswordClick() },
+                        onSignupClick = { if (areActionsEnabled) onSignupClick() },
+                        scrollState = scrollState,
+                        verticalSpacing = verticalSpacing,
+                        loginError = loginError,
+                        isLoading = isLoading,
+                        canAttemptLogin = canAttemptLogin,
+                        areActionsEnabled = areActionsEnabled
+                    )
+                }
+            }
+        }
+
+        // Loading Overlay
+        if (isLoading) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(MaterialTheme.colorScheme.background.copy(alpha = 0.7f))
+                    .clickable(enabled = false, onClick = {}), // Consume clicks
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
             }
         }
     }
@@ -233,17 +266,26 @@ private fun LoginPortraitLayout(
     verticalSpacing: Dp,
     loginError: String?,
     isLoading: Boolean,
-    canAttemptLogin: Boolean
+    canAttemptLogin: Boolean,
+    areActionsEnabled: Boolean
 ) {
-    // Specific error for email field if loginError indicates format issue or field is invalid & unfocused
     val emailFieldError = when {
         !isEmailFocused && email.isNotEmpty() && !isEmailFormatValid -> "Invalid email format."
-        loginError != null && (loginError.contains("email", ignoreCase = true) || loginError.contains("user not found", ignoreCase = true) || loginError.contains("no account", ignoreCase = true)) -> loginError
+        loginError != null && (loginError.contains("email", ignoreCase = true) ||
+                loginError.contains("user not found", ignoreCase = true) ||
+                loginError.contains("no account", ignoreCase = true) ||
+                loginError.equals("Email and password cannot be empty.", ignoreCase = true) && email.isBlank())
+            -> loginError
         else -> null
     }
-    // Password field shows the loginError if it's not specific to email or if it's a password error
-    val passwordFieldError = if (loginError != null && emailFieldError == null && (loginError.contains("password", ignoreCase = true) || loginError.contains("credential", ignoreCase = true))) loginError else null
-    // General error shown if not attributed to a specific field by above logic
+    val passwordFieldError = when {
+        loginError != null && emailFieldError == null &&
+                (loginError.contains("password", ignoreCase = true) ||
+                        loginError.contains("credential", ignoreCase = true) ||
+                        loginError.equals("Email and password cannot be empty.", ignoreCase = true) && password.isBlank())
+            -> loginError
+        else -> null
+    }
     val generalLoginError = if (loginError != null && emailFieldError == null && passwordFieldError == null) loginError else null
 
 
@@ -259,7 +301,7 @@ private fun LoginPortraitLayout(
         ) {
             GoBackButton(
                 onClick = onBackClick,
-                modifier = Modifier.align(Alignment.CenterStart)
+                modifier = Modifier.align(Alignment.CenterStart),
             )
             Text(
                 text = "Log In",
@@ -279,7 +321,7 @@ private fun LoginPortraitLayout(
             isFocused = isEmailFocused,
             onFocusChanged = onEmailFocusChanged,
             isFieldValid = isEmailFormatValid && email.isNotEmpty(),
-            errorMessage = emailFieldError
+            errorMessage = if (isLoading) null else emailFieldError,
         )
 
         Spacer(modifier = Modifier.height(verticalSpacing))
@@ -292,11 +334,11 @@ private fun LoginPortraitLayout(
             onTogglePasswordVisibility = onTogglePasswordVisibility,
             isFocused = isPasswordFocused,
             onFocusChanged = onPasswordFocusChanged,
-            errorMessage = passwordFieldError,
-            passwordRequirements = null
+            errorMessage = if (isLoading) null else passwordFieldError,
+            passwordRequirements = null,
         )
 
-        if (generalLoginError != null) {
+        if (!isLoading && generalLoginError != null) {
             Text(
                 text = generalLoginError,
                 color = MaterialTheme.colorScheme.error,
@@ -314,11 +356,12 @@ private fun LoginPortraitLayout(
         ) {
             TextButton(
                 onClick = onForgotPasswordClick,
-                modifier = Modifier.align(Alignment.CenterEnd)
+                modifier = Modifier.align(Alignment.CenterEnd),
+                enabled = areActionsEnabled
             ) {
                 Text(
                     text = "Forgot Password?",
-                    color = MaterialTheme.colorScheme.primary,
+                    color = if (areActionsEnabled) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.primary.copy(alpha = 0.38f),
                     style = MaterialTheme.typography.bodyMedium
                 )
             }
@@ -332,10 +375,9 @@ private fun LoginPortraitLayout(
             backgroundColor = MaterialTheme.colorScheme.primary,
             textColor = MaterialTheme.colorScheme.onPrimary,
             modifier = Modifier.fillMaxWidth(),
-            enabled = !isLoading && canAttemptLogin
+            enabled = areActionsEnabled && canAttemptLogin
         )
 
-        OrLogInWithDivider(modifier = Modifier.padding(vertical = verticalSpacing))
 
         GoogleButton(
             onClick = onGoogleLoginClick,
@@ -344,7 +386,7 @@ private fun LoginPortraitLayout(
             textColor = MaterialTheme.colorScheme.onBackground,
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(vertical = verticalSpacing)
+                .padding(vertical = verticalSpacing),
         )
 
         Spacer(modifier = Modifier.height(verticalSpacing))
@@ -358,7 +400,7 @@ private fun LoginPortraitLayout(
         ) {
             SignupPrompt(
                 onSignupClick = onSignupClick,
-                animationTriggered = true
+                animationTriggered = true,
             )
         }
     }
@@ -386,14 +428,26 @@ private fun LoginLandscapeLayout(
     verticalSpacing: Dp,
     loginError: String?,
     isLoading: Boolean,
-    canAttemptLogin: Boolean
+    canAttemptLogin: Boolean,
+    areActionsEnabled: Boolean
 ) {
     val emailFieldError = when {
         !isEmailFocused && email.isNotEmpty() && !isEmailFormatValid -> "Invalid email format."
-        loginError != null && (loginError.contains("email", ignoreCase = true) || loginError.contains("user not found", ignoreCase = true) || loginError.contains("no account", ignoreCase = true)) -> loginError
+        loginError != null && (loginError.contains("email", ignoreCase = true) ||
+                loginError.contains("user not found", ignoreCase = true) ||
+                loginError.contains("no account", ignoreCase = true) ||
+                loginError.equals("Email and password cannot be empty.", ignoreCase = true) && email.isBlank())
+            -> loginError
         else -> null
     }
-    val passwordFieldError = if (loginError != null && emailFieldError == null && (loginError.contains("password", ignoreCase = true) || loginError.contains("credential", ignoreCase = true))) loginError else null
+    val passwordFieldError = when {
+        loginError != null && emailFieldError == null &&
+                (loginError.contains("password", ignoreCase = true) ||
+                        loginError.contains("credential", ignoreCase = true) ||
+                        loginError.equals("Email and password cannot be empty.", ignoreCase = true) && password.isBlank())
+            -> loginError
+        else -> null
+    }
     val generalLoginError = if (loginError != null && emailFieldError == null && passwordFieldError == null) loginError else null
 
     Column(
@@ -409,7 +463,7 @@ private fun LoginLandscapeLayout(
         ) {
             GoBackButton(
                 onClick = onBackClick,
-                modifier = Modifier.align(Alignment.CenterStart)
+                modifier = Modifier.align(Alignment.CenterStart),
             )
             Text(
                 text = "Log In",
@@ -429,7 +483,7 @@ private fun LoginLandscapeLayout(
             isFocused = isEmailFocused,
             onFocusChanged = onEmailFocusChanged,
             isFieldValid = isEmailFormatValid && email.isNotEmpty(),
-            errorMessage = emailFieldError
+            errorMessage = if (isLoading) null else emailFieldError,
         )
 
         Spacer(modifier = Modifier.height(verticalSpacing))
@@ -442,11 +496,11 @@ private fun LoginLandscapeLayout(
             onTogglePasswordVisibility = onTogglePasswordVisibility,
             isFocused = isPasswordFocused,
             onFocusChanged = onPasswordFocusChanged,
-            errorMessage = passwordFieldError,
-            passwordRequirements = null
+            errorMessage = if (isLoading) null else passwordFieldError,
+            passwordRequirements = null,
         )
 
-        if (generalLoginError != null) {
+        if (!isLoading && generalLoginError != null) {
             Text(
                 text = generalLoginError,
                 color = MaterialTheme.colorScheme.error,
@@ -464,11 +518,12 @@ private fun LoginLandscapeLayout(
         ) {
             TextButton(
                 onClick = onForgotPasswordClick,
-                modifier = Modifier.align(Alignment.CenterEnd)
+                modifier = Modifier.align(Alignment.CenterEnd),
+                enabled = areActionsEnabled
             ) {
                 Text(
                     text = "Forgot Password?",
-                    color = MaterialTheme.colorScheme.primary,
+                    color = if (areActionsEnabled) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.primary.copy(alpha = 0.38f),
                     style = MaterialTheme.typography.bodyMedium
                 )
             }
@@ -482,11 +537,9 @@ private fun LoginLandscapeLayout(
             backgroundColor = MaterialTheme.colorScheme.primary,
             textColor = MaterialTheme.colorScheme.onPrimary,
             modifier = Modifier.fillMaxWidth(),
-            enabled = !isLoading && canAttemptLogin
+            enabled = areActionsEnabled && canAttemptLogin
         )
 
-        // For landscape, OrLogInWithDivider might be less common, but including for consistency
-        OrLogInWithDivider(modifier = Modifier.padding(vertical = verticalSpacing))
 
         GoogleButton(
             onClick = onGoogleLoginClick,
@@ -495,7 +548,7 @@ private fun LoginLandscapeLayout(
             textColor = MaterialTheme.colorScheme.onBackground,
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(vertical = verticalSpacing)
+                .padding(vertical = verticalSpacing),
         )
 
         Spacer(modifier = Modifier.height(verticalSpacing))
@@ -509,35 +562,8 @@ private fun LoginLandscapeLayout(
         ) {
             SignupPrompt(
                 onSignupClick = onSignupClick,
-                animationTriggered = true
+                animationTriggered = true,
             )
         }
-    }
-}
-
-@Composable
-private fun OrLogInWithDivider(modifier: Modifier = Modifier) {
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(vertical = 8.dp) // Added padding for better spacing around it
-    ) {
-        HorizontalDivider(
-            modifier = Modifier.weight(1f),
-            thickness = 1.dp,
-            color = MaterialTheme.colorScheme.outline
-        )
-        Text(
-            text = "Or log in with",
-            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f), // Adjusted alpha for subtlety
-            style = MaterialTheme.typography.bodySmall,
-            modifier = Modifier.padding(horizontal = 16.dp)
-        )
-        HorizontalDivider(
-            modifier = Modifier.weight(1f),
-            thickness = 1.dp,
-            color = MaterialTheme.colorScheme.outline
-        )
     }
 }

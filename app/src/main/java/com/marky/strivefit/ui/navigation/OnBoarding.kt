@@ -81,8 +81,8 @@ fun NavGraphBuilder.onboardingNavGraph(navController: NavHostController) {
     ) {
         SignUp(
             onBackClick = { navController.popBackStack() },
-            onSignUpClick = { /* testing try  */ },
-            onGoogleSignUpClick = { /* Google sign up */ }
+            onSignUpSuccess = { /* testing try  */ },
+            onInitiateGoogleSignUp = { /* Google sign up */ }
         )
     }
 

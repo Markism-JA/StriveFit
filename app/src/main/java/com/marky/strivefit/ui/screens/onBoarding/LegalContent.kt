@@ -1,3 +1,5 @@
+package com.marky.strivefit.ui.screens.onBoarding
+
 val termsOfServiceText = """
     Welcome to StriveFit! By accessing or using our app, you agree to be bound by the following:
 
@@ -26,7 +28,7 @@ val termsOfServiceText = """
     We may update these Terms at any time. We’ll notify you of major changes. Continued use of the app means you accept the updated terms.
 
     9. Contact Us
-    If you have any questions about these Terms, please contact us at [Contact Information].
+    If you have any questions about these Terms, please contact us at amarillemark349@gmail.com.
 """.trimIndent()
 
 val privacyPolicyText = """
@@ -54,5 +56,5 @@ val privacyPolicyText = """
     We may update this Privacy Policy. Continued use of the app means you agree to the new policy.
 
     8. Contact Us
-    If you have any questions about this Privacy Policy, please contact us at [Contact Information].
+    If you have any questions about this Privacy Policy, please contact us at amarillemark349@gmail.com.
 """.trimIndent()

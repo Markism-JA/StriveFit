@@ -1,4 +1,4 @@
-package com.marky.strivefit.data.local.entities
+package com.marky.strivefit.data.local.entities.user
 
 import androidx.room.ColumnInfo
 import androidx.room.Entity
@@ -29,7 +29,8 @@ data class UserDataEntity(
     @ColumnInfo(name = "xp", defaultValue = "0") val xp: Int = 0,
     @ColumnInfo(name = "level", defaultValue = "1") val level: Int = 1,
     val weight: Double, //metric
-    val height: Double //metric convert using app preferences and app logic
+    val height: Double, //metric convert using app preferences and app logic
+    val setupFinished: Boolean
 )
 
 

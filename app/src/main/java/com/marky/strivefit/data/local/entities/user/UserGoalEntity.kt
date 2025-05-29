@@ -1,8 +1,10 @@
-package com.marky.strivefit.data.local.entities
+package com.marky.strivefit.data.local.entities.user
 
 import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.PrimaryKey
+import com.marky.strivefit.data.local.entities.app.ExerciseEntity
+import com.marky.strivefit.data.local.entities.user.UserDataEntity
 import com.marky.strivefit.data.values.GoalType
 import com.marky.strivefit.data.values.RepeatInterval
 

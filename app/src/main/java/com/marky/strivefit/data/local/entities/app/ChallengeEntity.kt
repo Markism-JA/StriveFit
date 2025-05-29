@@ -1,8 +1,10 @@
-package com.marky.strivefit.data.local.entities
+ package com.marky.strivefit.data.local.entities.app
 
 import androidx.room.Entity
+import androidx.room.ForeignKey
 import androidx.room.Index
 import androidx.room.PrimaryKey
+import com.marky.strivefit.data.values.ChallengeType
 import com.marky.strivefit.data.values.RepeatInterval
 
 @Entity(
@@ -10,6 +12,14 @@ import com.marky.strivefit.data.values.RepeatInterval
     indices = [
         Index(value = ["name", "createdByUserId"], unique = true),
         Index(value = ["id"], unique = true)
+    ],
+    foreignKeys = [
+        ForeignKey(
+           entity = BadgeEntity::class,
+            parentColumns = ["id"],
+            childColumns = ["badgeId"],
+            onDelete = ForeignKey.Companion.CASCADE
+        )
     ]
 )
 data class ChallengeEntity(
@@ -17,7 +27,7 @@ data class ChallengeEntity(
     val name: String,
     val title: String,
     val description: String,
-    val challengeType: String, // e.g. steps, workout
+    val challengeType: ChallengeType, // e.g. steps, workout
     val targetValue: Int,
     val repeatInterval: RepeatInterval,
     val duration: Int,

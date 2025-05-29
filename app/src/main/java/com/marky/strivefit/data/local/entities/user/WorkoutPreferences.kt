@@ -3,6 +3,7 @@ package com.marky.strivefit.data.local.entities
 import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.PrimaryKey
+import com.marky.strivefit.data.local.entities.user.UserDataEntity
 import java.time.LocalTime
 
 @Entity(
