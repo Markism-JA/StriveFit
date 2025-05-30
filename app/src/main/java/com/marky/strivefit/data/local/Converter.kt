@@ -1,3 +1,5 @@
+package com.marky.strivefit.data.local
+
 // Converters.kt
 import androidx.room.TypeConverter
 import com.google.gson.Gson

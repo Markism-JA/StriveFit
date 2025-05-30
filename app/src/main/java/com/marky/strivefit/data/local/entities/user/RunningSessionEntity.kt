@@ -5,7 +5,7 @@ import androidx.room.PrimaryKey
 import java.util.Date
 
 @Entity(tableName = "running_sessions")
-data class RunningSession(
+data class RunningSessionEntity(
     @PrimaryKey val id: Int = 0,              // Unique session ID (e.g., generated or from Health Connect)
     val userId: String,                      // Reference to user
     val startTime: Date,                   // Epoch millis - session start time
