@@ -1,2 +1,8 @@
-package com.marky.strivefit.data.l.values 
+package com.marky.strivefit.data.values
 
+enum class ActivityType {
+    EXERCISE_STRENGTH,
+    EXERCISE_ENDURANCE,
+    RUNNING,
+    CYCLING
+}

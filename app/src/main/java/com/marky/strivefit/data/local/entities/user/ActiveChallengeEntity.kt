@@ -16,6 +16,13 @@ import java.util.Date
             childColumns = ["challenge_id"],
             onDelete = ForeignKey.CASCADE,
             onUpdate = ForeignKey.CASCADE
+        ),
+        ForeignKey(
+            entity = UserDataEntity::class,
+            parentColumns = ["id"],
+            childColumns = ["user_id"],
+            onDelete = ForeignKey.CASCADE,
+            onUpdate = ForeignKey.CASCADE
         )
     ],
     indices = [
@@ -23,7 +30,7 @@ import java.util.Date
         Index(value = ["challenge_id"]),
     ]
 )
-data class ActiveChallenge(
+data class ActiveChallengeEntity(
     @PrimaryKey
     @ColumnInfo(name = "id")
     val id: String,
@@ -52,11 +59,11 @@ data class ActiveChallenge(
     @ColumnInfo(name = "completed_date")
     var completedDate: Date?,
 
-    @ColumnInfo(name = "created_at")
-    var createdAt: Date?,
+    @ColumnInfo(name = "last_modified")
+    var lastModified: Date?,
 
-    @ColumnInfo(name = "updated_at")
-    var updatedAt: Date?
+    @ColumnInfo(name = "last_synced")
+    var lastSynced: Date?
 
 
 )

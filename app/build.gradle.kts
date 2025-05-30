@@ -11,6 +11,12 @@ android {
     namespace = "com.marky.strivefit"
     compileSdk = 36
 
+    ksp {
+        arg("room.schemaLocation", "$projectDir/schemas")
+        arg("room.incremental", "true")
+        arg("room.expandProjection", "true")
+    }
+
     defaultConfig {
         applicationId = "com.marky.strivefit"
         minSdk = 26
@@ -63,6 +69,10 @@ dependencies {
     // Hilt
     implementation(libs.hilt.android.v2562)
     implementation(libs.androidx.room.runtime)
+    implementation(libs.firebase.storage.ktx)
+    implementation(libs.androidx.media3.common.ktx)
+    implementation(libs.core.ktx)
+    implementation(libs.androidx.junit.ktx)
     ksp(libs.hilt.android.compiler)
     implementation(libs.androidx.hilt.navigation.compose)
 
@@ -95,7 +105,6 @@ dependencies {
 
     // Testing
     testImplementation(libs.junit)
-    androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(platform(libs.androidx.compose.bom))
     androidTestImplementation(libs.androidx.ui.test.junit4)
@@ -130,5 +139,7 @@ dependencies {
 
     //Flow Row
     implementation("com.google.accompanist:accompanist-flowlayout:0.28.0")
+
+    implementation("com.google.firebase:firebase-firestore-ktx:25.1.4") // or latest
 }
 apply(plugin = "com.google.gms.google-services")

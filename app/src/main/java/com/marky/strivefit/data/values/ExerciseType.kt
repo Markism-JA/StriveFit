@@ -1,4 +1,4 @@
-package com.marky.strivefit.data.l.values
+package com.marky.strivefit.data.values
 
 enum class ExerciseType {
     STRENGTH,

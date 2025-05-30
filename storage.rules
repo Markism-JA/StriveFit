@@ -1,12 +1,25 @@
 rules_version = '2';
-
-// Craft rules based on data in your Firestore database
-// allow write: if firestore.get(
-//    /databases/(default)/documents/users/$(request.auth.uid)).data.isAdmin;
 service firebase.storage {
   match /b/{bucket}/o {
-    match /{allPaths=**} {
-      allow read, write: if false;
+    
+    // User uploads (e.g., profile pictures, logs, personal images)
+    match /user_uploads/{userId}/{allPaths=**} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+
+    // Public exercise media (images, videos)
+    match /exercise_media/{exerciseId}/{allPaths=**} {
+      // Anyone authenticated can read
+      allow read: if request.auth != null;
+
+      allow write: if request.auth.token.admin == true;
+    }
+
+    match /badge_media/{badgeId}/{allPaths=**} {
+      // Anyone authenticated can read
+      allow read: if request.auth != null;
+
+      allow write: if request.auth.token.admin == true;
     }
   }
 }
