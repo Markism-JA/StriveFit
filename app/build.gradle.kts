@@ -64,12 +64,11 @@ dependencies {
     implementation ("androidx.credentials:credentials:1.5.0")
     implementation ("androidx.credentials:credentials-play-services-auth:1.6.0-alpha02")
     implementation ("com.google.android.libraries.identity.googleid:googleid:1.1.1")
-
+    implementation(libs.firebase.storage.ktx)
 
     // Hilt
     implementation(libs.hilt.android.v2562)
     implementation(libs.androidx.room.runtime)
-    implementation(libs.firebase.storage.ktx)
     implementation(libs.androidx.media3.common.ktx)
     implementation(libs.core.ktx)
     implementation(libs.androidx.junit.ktx)
@@ -95,6 +94,7 @@ dependencies {
     // Room
     implementation(libs.androidx.annotation)
     implementation(libs.androidx.room.ktx)
+    testImplementation("androidx.room:room-testing:2.7.1")
 
     // Font
     implementation(libs.androidx.ui.text.google.fonts)

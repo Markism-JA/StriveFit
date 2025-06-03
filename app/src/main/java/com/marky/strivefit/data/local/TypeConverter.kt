@@ -17,7 +17,7 @@ import com.marky.strivefit.data.values.Targets
 import com.marky.strivefit.data.values.WorkoutSessionStatus
 import java.util.Date
 
-class Converters {
+class TypeConverters {
 
     private val stringListDelimiter = ";;;"
     private val nullStringPlaceholder = "__NULL_STR__"

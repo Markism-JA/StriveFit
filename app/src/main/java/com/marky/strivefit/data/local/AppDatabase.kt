@@ -1,20 +1,20 @@
-package com.marky.strivefit.data.local // Or your main app package for database setup
+package com.marky.strivefit.data.local
 
 import android.content.Context
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
-import com.marky.strivefit.data.local.dao.app.* // Assuming DAOs for 'app' entities are here
-import com.marky.strivefit.data.local.dao.user.* // Assuming DAOs for 'user' entities are here
+import com.marky.strivefit.data.local.dao.app.*
+import com.marky.strivefit.data.local.dao.user.*
 import com.marky.strivefit.data.local.entities.app.*
 import com.marky.strivefit.data.local.entities.user.*
+
 @Database(
         entities = [
 BadgeEntity::class,
 ChallengeEntity::class,
 ExerciseEntity::class,
-
 ActiveChallengeEntity::class,
 CompletedChallengeEntity::class,
 CyclingSessionEntity::class,
@@ -31,7 +31,7 @@ WorkoutSessionEntity::class
 version = 1,
 exportSchema = true
         )
-@TypeConverters(Converters::class)
+@TypeConverters(com.marky.strivefit.data.local.TypeConverters::class)
 abstract class AppDatabase : RoomDatabase() {
 
     // DAOs for 'app' entities
@@ -66,8 +66,8 @@ abstract class AppDatabase : RoomDatabase() {
                         AppDatabase::class.java,
                         DATABASE_NAME
                 )
-                // .addMigrations(MIGRATION_1_2, MIGRATION_2_3) // Add your migrations here
-                // .fallbackToDestructiveMigration() // Use only during development, remove for production!
+//                .addMigrations(MIGRATION_1_2, MIGRATION_2_3) // Add your migrations here
+                .fallbackToDestructiveMigration() // Use only during development, remove for production!
                 .build()
                 INSTANCE = instance
                 instance

@@ -42,7 +42,6 @@ fun StriveFitApp() {
                     startDestination = route
                 ) {
                     onboardingNavGraph(navController)
-                    userSetupNavGraph(navController)
                     mainAppNavGraph(navController)
                 }
             }

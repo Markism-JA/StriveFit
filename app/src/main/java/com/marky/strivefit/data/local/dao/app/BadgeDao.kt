@@ -21,5 +21,5 @@ interface BadgeDao {
     suspend fun getBadgeById(badgeId: String): BadgeEntity?
 
     @Query("DELETE FROM Badges")
-    suspend fun clearAllBadges()
+    suspend fun clearAllBadges(): Int
 }
