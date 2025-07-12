@@ -35,18 +35,14 @@ fun LegalContentDialog(
     val screenWidthDp = configuration.screenWidthDp.dp
 
     val dialogModifier = Modifier.Companion
-        .fillMaxHeight(0.85f) // Use 85% of the available height
+        .fillMaxHeight(0.85f)
         .then(
             if (isLandscape) {
-                // In landscape, use 90% of the screen width, capped at 800dp.
-                // Min width is 320dp.
                 Modifier.Companion.widthIn(
                     min = 320.dp,
-                    max = min(screenWidthDp * 0.9f, 800.dp) // Corrected logic
+                    max = min(screenWidthDp * 0.9f, 800.dp)
                 )
             } else {
-                // In portrait, use 85% of the screen width, capped at 560dp.
-                // Min width is 280dp.
                 Modifier.Companion.widthIn(
                     min = 280.dp,
                     max = min(screenWidthDp * 0.85f, 560.dp)

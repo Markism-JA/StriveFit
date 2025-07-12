@@ -33,11 +33,11 @@ import com.marky.strivefit.ui.utilities.calculateWindowWidthSizeClass
 import kotlinx.coroutines.delay
 
 @Composable
-fun Welcome(
+fun WelcomeScreen(
     windowSizeClass: WindowSizeClass? = null,
-    onSignUpClick: () -> Unit = {},
-    onGuestClick: () -> Unit = {},
-    onLoginClick: () -> Unit = {}
+    onNavigateToSignUp: () -> Unit = {},
+    onNavigateToLogin: () -> Unit = {},
+    onNavigateToGuest: () -> Unit = {}
 ) {
     val configuration = LocalConfiguration.current
     val orientation = configuration.orientation
@@ -81,9 +81,9 @@ fun Welcome(
                 animationSequence = animationSequence,
                 widthSizeClass = widthSizeClass,
                 heightSizeClass = heightSizeClass,
-                onSignUpClick = onSignUpClick,
-                onGuestClick = onGuestClick,
-                onLoginClick = onLoginClick
+                onSignUpClick = onNavigateToSignUp,
+                onGuestClick = onNavigateToGuest,
+                onLoginClick = onNavigateToLogin
             )
         } else {
             PortraitWelcomeLayout(
@@ -91,9 +91,9 @@ fun Welcome(
                 animationSequence = animationSequence,
                 widthSizeClass = widthSizeClass,
                 heightSizeClass = heightSizeClass,
-                onSignUpClick = onSignUpClick,
-                onGuestClick = onGuestClick,
-                onLoginClick = onLoginClick
+                onSignUpClick = onNavigateToSignUp,
+                onGuestClick = onNavigateToGuest,
+                onLoginClick = onNavigateToLogin
             )
         }
     } else {
@@ -102,9 +102,9 @@ fun Welcome(
             animationSequence = animationSequence,
             widthSizeClass = widthSizeClass,
             heightSizeClass = heightSizeClass,
-            onSignUpClick = onSignUpClick,
-            onGuestClick = onGuestClick,
-            onLoginClick = onLoginClick
+            onSignUpClick = onNavigateToSignUp,
+            onGuestClick = onNavigateToGuest,
+            onLoginClick = onNavigateToLogin
         )
     }
 }

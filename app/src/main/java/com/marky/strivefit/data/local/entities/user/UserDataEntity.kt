@@ -84,5 +84,4 @@ data class UserDataEntity(
 
     @ColumnInfo(name = "last_login_at")
     var lastLoginAt: Date?
-
 )

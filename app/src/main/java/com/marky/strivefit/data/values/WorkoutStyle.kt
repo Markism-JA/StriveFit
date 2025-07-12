@@ -1,4 +1,4 @@
-package com.marky.strivefit.data.l.values
+package com.marky.strivefit.data.values
 
 enum class WorkoutStyle {
     CIRCUIT,     // Multiple exercises performed back-to-back with minimal rest. Great for muscular endurance, cardiovascular fitness, and time efficiency. Can be adapted for hypertrophy or fat loss depending on exercise choice and intensity.

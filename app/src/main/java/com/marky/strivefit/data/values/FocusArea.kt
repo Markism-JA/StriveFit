@@ -8,5 +8,15 @@ enum class FocusArea {
     CORE,
     LEGS,
     GLUTES,
-    FULL_BODY,
+    FULL_BODY;
+
+    companion object {
+        fun fromString(value: String): FocusArea? {
+            return try {
+                valueOf(value.uppercase())
+            } catch (e: IllegalArgumentException) {
+                null
+            }
+        }
+    }
 }

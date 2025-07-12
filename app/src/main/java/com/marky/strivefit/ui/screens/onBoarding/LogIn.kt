@@ -1,5 +1,7 @@
 package com.marky.strivefit.ui.screens.onBoarding
 
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import android.util.Patterns
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.tween
@@ -77,6 +79,56 @@ fun Login(
     var loginError by remember { mutableStateOf<String?>(null) }
     val authStateValue by authViewModel.authState.collectAsState()
     var isLoading by remember { mutableStateOf(false) }
+
+    val context = LocalContext.current
+    val oneTapClient = remember { Identity.getSignInClient(context) }
+    val webClientId = stringResource(id = R.string.default_web_client_id)
+
+    val googleSignInLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.StartIntentSenderForResult()
+    ) { result ->
+        if (result.resultCode == Activity.RESULT_OK) {
+            try {
+                val credential = oneTapClient.getSignInCredentialFromIntent(result.data)
+                val idToken = credential.googleIdToken
+                if (idToken != null) {
+                    authViewModel.signInWithGoogle(idToken)
+                } else {
+                    loginError = "Google Sign-In failed: idToken is null"
+                }
+            } catch (e: ApiException) {
+                loginError = "Google Sign-In failed: ${e.localizedMessage}"
+            }
+        }
+    }
+
+    val onGoogleLoginClick = {
+        val signInRequest = BeginSignInRequest.builder()
+            .setGoogleIdTokenRequestOptions(
+                BeginSignInRequest.GoogleIdTokenRequestOptions.builder()
+                    .setSupported(true)
+                    .setServerClientId(webClientId)
+                    .setFilterByAuthorizedAccounts(false)
+                    .build()
+            )
+            .build()
+
+        oneTapClient.beginSignIn(signInRequest)
+            .addOnSuccessListener { result ->
+                try {
+                    googleSignInLauncher.launch(
+                        IntentSenderRequest.Builder(
+                            result.pendingIntent.intentSender
+                        ).build()
+                    )
+                } catch (e: Exception) {
+                    loginError = "Google Sign-In failed: ${e.localizedMessage}"
+                }
+            }
+            .addOnFailureListener { e ->
+                loginError = "Google Sign-In failed: ${e.localizedMessage}"
+            }
+    }
 
     LaunchedEffect(authStateValue) {
         when (val state = authStateValue) {

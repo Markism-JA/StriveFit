@@ -66,7 +66,6 @@ abstract class AppDatabase : RoomDatabase() {
                         AppDatabase::class.java,
                         DATABASE_NAME
                 )
-//                .addMigrations(MIGRATION_1_2, MIGRATION_2_3) // Add your migrations here
                 .fallbackToDestructiveMigration() // Use only during development, remove for production!
                 .build()
                 INSTANCE = instance

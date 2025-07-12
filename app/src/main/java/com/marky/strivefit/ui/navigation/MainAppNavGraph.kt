@@ -6,11 +6,11 @@ import androidx.navigation.compose.composable
 import androidx.navigation.navigation
 import com.marky.strivefit.ui.screens.mainApp.MainAppScreen
 
-fun NavGraphBuilder.mainAppNavGraph(rootNavController: NavHostController) {
+fun NavGraphBuilder.MainAppNavGraph(rootNavController: NavHostController) {
     navigation(MainRoutes.Home.route, route = "mainApp") {
 
         composable(MainRoutes.Home.route) {
-            MainAppScreen(rootNavController = rootNavController)
+            MainAppScreen()
         }
     }
 }

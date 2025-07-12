@@ -2,13 +2,29 @@ package com.marky.strivefit.ui.screens.userSetup
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateContentSize
-import androidx.compose.animation.core.*
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
@@ -16,19 +32,17 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.delay
 
-/**
- * Represents the different states in the loading sequence
- */
 enum class LoadingState(val message: String) {
     DOWNLOADING("Downloading exercise content"),
     ANALYZING("Analyzing user profile"),
     GENERATING("Generating Workout Plans"),
     COMPLETE("Everything is ready!")
 }
+
 @Composable
 fun LoadingScreen(
     onComplete: () -> Unit = {},
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier.Companion
 ) {
     var currentState by remember { mutableStateOf(LoadingState.DOWNLOADING) }
     var showComplete by remember { mutableStateOf(false) }
@@ -66,7 +80,7 @@ fun LoadingScreen(
         modifier = modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background),
-        contentAlignment = Alignment.Center
+        contentAlignment = Alignment.Companion.Center
     ) {
         LoadingContent(
             progress = progress.value,
@@ -86,9 +100,9 @@ private fun LoadingContent(
     showComplete: Boolean
 ) {
     Column(
-        horizontalAlignment = Alignment.CenterHorizontally,
+        horizontalAlignment = Alignment.Companion.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
-        modifier = Modifier
+        modifier = Modifier.Companion
             .fillMaxWidth(0.85f)
             .padding(16.dp)
     ) {
@@ -96,20 +110,20 @@ private fun LoadingContent(
         if (!showComplete) {
             LinearProgressIndicator(
                 progress = { progress },
-                modifier = Modifier
+                modifier = Modifier.Companion
                     .fillMaxWidth()
                     .height(8.dp),
                 trackColor = MaterialTheme.colorScheme.surfaceVariant,
                 color = MaterialTheme.colorScheme.primary
             )
 
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.Companion.height(24.dp))
         }
 
         // Display loading state or completion message
         Box(
-            modifier = Modifier.height(80.dp),
-            contentAlignment = Alignment.Center
+            modifier = Modifier.Companion.height(80.dp),
+            contentAlignment = Alignment.Companion.Center
         ) {
             if (!showComplete) {
                 // Display current loading state message
@@ -117,8 +131,8 @@ private fun LoadingContent(
                     text = currentState.message,
                     style = MaterialTheme.typography.bodyLarge,
                     color = MaterialTheme.colorScheme.onBackground,
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier.animateContentSize()
+                    textAlign = TextAlign.Companion.Center,
+                    modifier = Modifier.Companion.animateContentSize()
                 )
             } else {
                 // Display completion message with animation
@@ -139,17 +153,17 @@ private fun CompletionMessage() {
         exit = fadeOut(animationSpec = tween(800))
     ) {
         Column(
-            horizontalAlignment = Alignment.CenterHorizontally
+            horizontalAlignment = Alignment.Companion.CenterHorizontally
         ) {
             Text(
                 text = "Everything is ready",
                 style = MaterialTheme.typography.headlineMedium,
                 color = MaterialTheme.colorScheme.onBackground,  // Changed from primary to tertiary
-                fontWeight = FontWeight.Bold,
-                textAlign = TextAlign.Center
+                fontWeight = FontWeight.Companion.Bold,
+                textAlign = TextAlign.Companion.Center
             )
 
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.Companion.height(8.dp))
         }
     }
 }

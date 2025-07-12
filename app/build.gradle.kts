@@ -4,6 +4,7 @@ plugins {
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.hilt)
     alias(libs.plugins.ksp)
+    alias(libs.plugins.kotlin.serialization)
     id("com.google.gms.google-services") version "4.4.2" apply false
 }
 
@@ -86,7 +87,10 @@ dependencies {
     implementation(libs.androidx.ui.graphics)
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
+
+    // Navigation
     implementation(libs.androidx.navigation.compose)
+    implementation(libs.kotlinx.serialization.json)
 
     // Security
     implementation(libs.androidx.security.crypto)
@@ -141,5 +145,7 @@ dependencies {
     implementation("com.google.accompanist:accompanist-flowlayout:0.28.0")
 
     implementation("com.google.firebase:firebase-firestore-ktx:25.1.4") // or latest
+
+
 }
 apply(plugin = "com.google.gms.google-services")

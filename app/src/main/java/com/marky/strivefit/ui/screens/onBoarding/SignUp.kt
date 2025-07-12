@@ -1,8 +1,12 @@
-package com.marky.strivefit.ui.screens.onBoarding
+package com.marky.strivefit.ui.screens.onBoaording
 
+import androidx.compose.ui.res.stringResource
 import LegalContentType
-import android.util.Patterns
+import android.app.Activity
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.R
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -11,7 +15,6 @@ import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -23,13 +26,11 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CheckboxDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
@@ -38,7 +39,6 @@ import androidx.compose.material3.windowsizeclass.WindowSizeClass
 import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -47,38 +47,94 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
-import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.google.android.gms.auth.api.identity.Identity
+import com.google.android.gms.common.api.ApiException
+import com.google.firebase.firestore.core.View
 import com.marky.strivefit.ui.components.AnimatedCustomButton
 import com.marky.strivefit.ui.components.FormField
 import com.marky.strivefit.ui.components.GoBackButton
 import com.marky.strivefit.ui.components.GoogleButton
 import com.marky.strivefit.ui.components.PasswordField
-import com.marky.strivefit.ui.components.PasswordFieldRequirementStatus
+import com.marky.strivefit.ui.screens.onBoarding.LegalContentDialog
 import com.marky.strivefit.ui.utilities.calculateWindowHeightSizeClass
 import com.marky.strivefit.ui.utilities.calculateWindowWidthSizeClass
-import com.marky.strivefit.ui.viewModel.AuthUiState
-import com.marky.strivefit.ui.viewModel.AuthViewModel
-import kotlinx.coroutines.Job
+import com.marky.strivefit.ui.viewModel.SignUpEvent
+import com.marky.strivefit.ui.viewModel.SignUpResult
+import com.marky.strivefit.ui.viewModel.SignUpUiState
+import com.marky.strivefit.ui.viewModel.SignUpViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
-const val PASSWORD_VISIBLE_DURATION_MS = 3000L // 3 seconds
-const val MAX_PASSWORD_LENGTH = 64
-const val MAX_FULL_NAME_LENGTH = 100
-const val MAX_EMAIL_LENGTH = 254
-
 @Composable
-fun SignUp(
-    viewModel: AuthViewModel = hiltViewModel(),
+fun SignUpScreen(
+    signUpViewModel: SignUpViewModel = hiltViewModel(),
     windowSizeClass: WindowSizeClass? = null,
     onBackClick: () -> Unit = {},
-    onSignUpSuccess: () -> Unit = {},
-    onInitiateGoogleSignUp: () -> Unit = {} // Called to start the Google sign-up flow
 ) {
-    val authStateValue by viewModel.authState.collectAsState()
+    val uiState by signUpViewModel.uiState.collectAsStateWithLifecycle()
+    val snakebarHostState = remember { SnackbarHostState() }
+    val scope = rememberCoroutineScope()
+
+
+    val context = LocalContext.current
+    val oneTapClient = remember { Identity.getSignInClient(context) }
+    val webClientId = stringResource(id = R.string.default_web_client_id)
+
+    val googleSignInLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.StartIntentSenderForResult()
+    ) { result ->
+        if (result.resultCode == Activity.RESULT_OK) {
+            try {
+                val credential = oneTapClient.getSignInCredentialFromIntent(result.data)
+                val idToken = credential.googleIdToken
+                if (idToken != null) {
+                    signUpViewModel.onEvent(SignUpEvent.GoogleSignInSucceeded(idToken))
+                } else {
+                }
+            } catch (e: ApiException) {
+            }
+        }
+    }
+
+
+    LaunchedEffect(key1 = true) {
+        signUpViewModel.resultFlow.collect { result ->
+            when (result) {
+                is SignUpResult.Success -> {
+                }
+
+                is SignUpResult.Error -> {
+                    // Show the error message from the ViewModel.
+                    snakebarHostState.showSnackbar(result.message)
+                }
+
+                is SignUpResult.LaunchGoogleSignIn -> {
+                    oneTapClient.beginSignIn(result.signInRequest)
+                        .addOnSuccessListener { beginSignInResult ->
+                            try {
+                                googleSignInLauncher.launch(
+                                    IntentSenderRequest.Builder(
+                                        beginSignInResult.pendingIntent.intentSender
+                                    ).build()
+                                )
+                            } catch (e: Exception) {
+                            }
+                        }
+                }
+                else -> {}
+            }
+        }
+    }
+
+    var isVisible by remember { mutableStateOf(false) }
+    LaunchedEffect(Unit) { isVisible = true }
+    val scrollState = rememberScrollState()
+
     val configuration = LocalConfiguration.current
     val screenWidth = configuration.screenWidthDp.dp
     val screenHeight = configuration.screenHeightDp.dp
@@ -99,124 +155,8 @@ fun SignUp(
         false -> 5.dp
     }
 
-    var fullName by remember { mutableStateOf("") }
-    var email by remember { mutableStateOf("") }
-    var password by remember { mutableStateOf("") }
-    var confirmPassword by remember { mutableStateOf("") }
-    var isPasswordVisible by remember { mutableStateOf(false) }
-    var isConfirmPasswordVisible by remember { mutableStateOf(false) }
-    var isTermsAccepted by remember { mutableStateOf(false) }
-
-    var isFullNameFocused by remember { mutableStateOf(false) }
-    var isEmailFocused by remember { mutableStateOf(false) }
-    var isPasswordFocused by remember { mutableStateOf(false) }
-    var isConfirmPasswordFocused by remember { mutableStateOf(false) }
-
-    var isFullNameActuallyValid by remember(fullName) { mutableStateOf(isValidFullName(fullName)) }
-    var isEmailActuallyValid by remember(email) { mutableStateOf(isValidEmail(email)) }
-
-    val fullNameErrorMessage = if (!isFullNameFocused && fullName.isNotEmpty() && !isFullNameActuallyValid) {
-        "Please enter a valid full name."
-    } else null
-    val emailErrorMessage = if (!isEmailFocused && email.isNotEmpty() && !isEmailActuallyValid) {
-        "Please enter a valid email address."
-    } else null
-
-    val scope = rememberCoroutineScope()
-    val snackbarHostState = remember { SnackbarHostState() }
-    var passwordVisibilityJob by remember { mutableStateOf<Job?>(null) }
-    var confirmPasswordVisibilityJob by remember { mutableStateOf<Job?>(null) }
-
-    var isVisible by remember { mutableStateOf(false) }
-    val scrollState = rememberScrollState()
     var showLegalDialog by remember { mutableStateOf<LegalContentType?>(null) }
     var isLoading by remember { mutableStateOf(false) }
-
-    val isPasswordStrongEnough = remember(password) {
-        hasMinLength(password) && hasUppercase(password) && hasLowercase(password) && hasDigit(password) && hasSpecialChar(password)
-    }
-    val arePasswordsMatching = remember(password, confirmPassword) {
-        password == confirmPassword
-    }
-    val canEnableSignUpButton = remember(fullName, email, password, confirmPassword, isPasswordStrongEnough, arePasswordsMatching, isTermsAccepted) {
-        isValidFullName(fullName) && isValidEmail(email) &&
-                password.isNotEmpty() && confirmPassword.isNotEmpty() &&
-                isPasswordStrongEnough && arePasswordsMatching &&
-                isTermsAccepted
-    }
-
-    LaunchedEffect(Unit) {
-        isVisible = true
-    }
-
-    LaunchedEffect(authStateValue) {
-        when (val state = authStateValue) {
-            is AuthUiState.Loading -> {
-                isLoading = true
-            }
-            is AuthUiState.Success -> {
-                isLoading = false
-                onSignUpSuccess() // Navigate on success
-                viewModel.resetAuthStateToIdle()
-            }
-            is AuthUiState.Error -> {
-                isLoading = false
-                scope.launch {
-                    snackbarHostState.showSnackbar(
-                        message = state.message,
-                        duration = SnackbarDuration.Long // Show error for a bit longer
-                    )
-                }
-                viewModel.resetAuthStateToIdle()
-            }
-            is AuthUiState.Idle -> {
-                isLoading = false // Ensure loading is false if state resets to Idle
-            }
-        }
-    }
-
-
-    val onTogglePasswordVisibilityLambda = {
-        passwordVisibilityJob?.cancel()
-        if (!isPasswordVisible) {
-            isPasswordVisible = true
-            passwordVisibilityJob = scope.launch {
-                delay(PASSWORD_VISIBLE_DURATION_MS)
-                isPasswordVisible = false
-            }
-        } else {
-            isPasswordVisible = false
-        }
-    }
-
-    val onToggleConfirmPasswordVisibilityLambda = {
-        confirmPasswordVisibilityJob?.cancel()
-        if (!isConfirmPasswordVisible) {
-            isConfirmPasswordVisible = true
-            confirmPasswordVisibilityJob = scope.launch {
-                delay(PASSWORD_VISIBLE_DURATION_MS)
-                isConfirmPasswordVisible = false
-            }
-        } else {
-            isConfirmPasswordVisible = false
-        }
-    }
-
-    val confirmPasswordErrorMessage = if (confirmPassword.isNotEmpty() && password != confirmPassword && (isConfirmPasswordFocused || password.length >= confirmPassword.length)) {
-        "Passwords do not match"
-    } else {
-        null
-    }
-
-    val performEmailSignUp = {
-        if (canEnableSignUpButton) { // Ensure form is valid before attempting
-            viewModel.signUpWithEmail(email.trim(), password, fullName.trim())
-        }
-    }
-
-    val actualEmailSignUpButtonEnabled = canEnableSignUpButton && !isLoading
-    val generalActionsEnabled = !isLoading
-
 
     Box(
         modifier = Modifier
@@ -240,122 +180,45 @@ fun SignUp(
                 when {
                     isLandscape -> {
                         SignUpLandscapeLayout(
-                            fullName = fullName,
-                            onFullNameChange = {
-                                if (it.length <= MAX_FULL_NAME_LENGTH) fullName = it
-                                isFullNameActuallyValid = isValidFullName(it)
-                            },
-                            isFullNameFocused = isFullNameFocused,
-                            onFullNameFocusChanged = { isFullNameFocused = it },
-                            email = email,
-                            onEmailChange = {
-                                if (it.length <= MAX_EMAIL_LENGTH) email = it
-                                isEmailActuallyValid = isValidEmail(it)
-                            },
-                            isEmailFocused = isEmailFocused,
-                            onEmailFocusChanged = { isEmailFocused = it },
-                            password = password,
-                            onPasswordChange = {
-                                if (it.length <= MAX_PASSWORD_LENGTH) password = it
-                            },
-                            isPasswordVisible = isPasswordVisible,
-                            onTogglePasswordVisibility = onTogglePasswordVisibilityLambda,
-                            onToggleConfirmPasswordVisibility = onToggleConfirmPasswordVisibilityLambda,
-                            isPasswordFocused = isPasswordFocused,
-                            onPasswordFocusChanged = { isPasswordFocused = it },
-                            confirmPassword = confirmPassword,
-                            onConfirmPasswordChange = {
-                                if (it.length <= MAX_PASSWORD_LENGTH) confirmPassword = it
-                            },
-                            isConfirmPasswordVisible = isConfirmPasswordVisible,
-                            isConfirmPasswordFocused = isConfirmPasswordFocused,
-                            onConfirmPasswordFocusChanged = { isConfirmPasswordFocused = it },
-                            isTermsAccepted = isTermsAccepted,
-                            onTermsAcceptedChange = { if (!isLoading) isTermsAccepted = it },
-                            heightSizeClass = heightSizeClass,
-                            onBackClick ={
-                                scope.launch {
-                                    isVisible = false
-                                    delay(300)
-                                    onBackClick()
-                                }
-                            },
-                            onSignUpClick = performEmailSignUp,
-                            onGoogleSignUpClick = { if (!isLoading) onInitiateGoogleSignUp() },
-                            onTermsClick = { if (!isLoading) showLegalDialog = LegalContentType.TERMS_OF_SERVICE },
-                            onPrivacyClick = { if (!isLoading) showLegalDialog = LegalContentType.PRIVACY_POLICY },
-                            scrollState = scrollState,
-                            isEmailSignUpEnabled = actualEmailSignUpButtonEnabled,
-                            areGeneralActionsEnabled = generalActionsEnabled,
-                            isFullNameActuallyValid = isFullNameActuallyValid,
-                            fullNameErrorMessage = fullNameErrorMessage,
-                            isEmailActuallyValid = isEmailActuallyValid,
-                            emailErrorMessage = emailErrorMessage,
-                            confirmPasswordErrorMessage = confirmPasswordErrorMessage
-                        )
+                                state = uiState,
+                                onEvent = signUpViewModel::onEvent,
+                                heightSizeClass = heightSizeClass,
+                                onBackClick = {
+                                    // We can still add transition animations to UI events
+                                    scope.launch {
+                                        isVisible = false
+                                        delay(300)
+                                        onBackClick()
+                                    }
+                                },
+                                onGoogleSignUpClick = { signUpViewModel.onEvent(SignUpEvent.GoogleSignUpClicked) },
+                                onTermsClick = { showLegalDialog = LegalContentType.TERMS_OF_SERVICE },
+                                onPrivacyClick = { showLegalDialog = LegalContentType.PRIVACY_POLICY },
+                                scrollState = scrollState)
                     }
                     else -> {
                         SignUpPortraitLayout(
-                            fullName = fullName,
-                            onFullNameChange = {
-                                if (it.length <= MAX_FULL_NAME_LENGTH) fullName = it
-                                isFullNameActuallyValid = isValidFullName(it)
-                            },
-                            isFullNameFocused = isFullNameFocused,
-                            onFullNameFocusChanged = { isFullNameFocused = it },
-                            email = email,
-                            onEmailChange = {
-                                if (it.length <= MAX_EMAIL_LENGTH) email = it
-                                isEmailActuallyValid = isValidEmail(it)
-                            },
-                            isEmailFocused = isEmailFocused,
-                            onEmailFocusChanged = { isEmailFocused = it },
-                            password = password,
-                            onPasswordChange = {
-                                if (it.length <= MAX_PASSWORD_LENGTH) password = it
-                            },
-                            isPasswordVisible = isPasswordVisible,
-                            onTogglePasswordVisibility = onTogglePasswordVisibilityLambda,
-                            isPasswordFocused = isPasswordFocused,
-                            onPasswordFocusChanged = { isPasswordFocused = it },
-                            confirmPassword = confirmPassword,
-                            onConfirmPasswordChange = {
-                                if (it.length <= MAX_PASSWORD_LENGTH) confirmPassword = it
-                            },
-                            isConfirmPasswordVisible = isConfirmPasswordVisible,
-                            onToggleConfirmPasswordVisibility = onToggleConfirmPasswordVisibilityLambda,
-                            isConfirmPasswordFocused = isConfirmPasswordFocused,
-                            onConfirmPasswordFocusChanged = { isConfirmPasswordFocused = it },
-                            isTermsAccepted = isTermsAccepted,
-                            onTermsAcceptedChange = { if (!isLoading) isTermsAccepted = it },
-                            heightSizeClass = heightSizeClass,
-                            onBackClick ={
-                                scope.launch {
-                                    isVisible = false
-                                    delay(300)
-                                    onBackClick()
-                                }
-                            },
-                            onSignUpClick = performEmailSignUp,
-                            onGoogleSignUpClick = { if (!isLoading) onInitiateGoogleSignUp() },
-                            onTermsClick = { if (!isLoading) showLegalDialog = LegalContentType.TERMS_OF_SERVICE },
-                            onPrivacyClick = { if (!isLoading) showLegalDialog = LegalContentType.PRIVACY_POLICY },
-                            scrollState = scrollState,
-                            isEmailSignUpEnabled = actualEmailSignUpButtonEnabled,
-                            areGeneralActionsEnabled = generalActionsEnabled,
-                            isFullNameActuallyValid = isFullNameActuallyValid,
-                            fullNameErrorMessage = fullNameErrorMessage,
-                            isEmailActuallyValid = isEmailActuallyValid,
-                            emailErrorMessage = emailErrorMessage,
-                            confirmPasswordErrorMessage = confirmPasswordErrorMessage
-                        )
+                                state = uiState,
+                                onEvent = signUpViewModel::onEvent,
+                                heightSizeClass = heightSizeClass,
+                                onBackClick = {
+                                    // We can still add transition animations to UI events
+                                    scope.launch {
+                                        isVisible = false
+                                        delay(300)
+                                        onBackClick()
+                                    }
+                                },
+                                onGoogleSignUpClick = { signUpViewModel.onEvent(SignUpEvent.GoogleSignUpClicked) },
+                                onTermsClick = { showLegalDialog = LegalContentType.TERMS_OF_SERVICE },
+                                onPrivacyClick = { showLegalDialog = LegalContentType.PRIVACY_POLICY },
+                                scrollState = scrollState)
                     }
                 }
             }
         }
 
-        // Loading Overlay
-        if (isLoading) {
+        if (uiState.isLoading) {
             Box(
                 modifier = Modifier
                     .fillMaxSize()
@@ -367,13 +230,11 @@ fun SignUp(
             }
         }
 
-        // Snackbar Host
         SnackbarHost(
-            hostState = snackbarHostState,
+            hostState = snakebarHostState,
             modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 16.dp)
         )
 
-        // Legal Dialog (conditionally shown on top of everything else if not loading)
         if (!isLoading) {
             showLegalDialog?.let { type ->
                 LegalContentDialog(
@@ -388,61 +249,19 @@ fun SignUp(
 
 @Composable
 private fun SignUpPortraitLayout(
-    fullName: String,
-    onFullNameChange: (String) -> Unit,
-    isFullNameFocused: Boolean,
-    onFullNameFocusChanged: (Boolean) -> Unit,
-    email: String,
-    onEmailChange: (String) -> Unit,
-    isEmailFocused: Boolean,
-    onEmailFocusChanged: (Boolean) -> Unit,
-    password: String,
-    onPasswordChange: (String) -> Unit,
-    isPasswordVisible: Boolean,
-    onTogglePasswordVisibility: () -> Unit,
-    isPasswordFocused: Boolean,
-    onPasswordFocusChanged: (Boolean) -> Unit,
-    confirmPassword: String,
-    onConfirmPasswordChange: (String) -> Unit,
-    isConfirmPasswordVisible: Boolean,
-    onToggleConfirmPasswordVisibility: () -> Unit,
-    isConfirmPasswordFocused: Boolean,
-    onConfirmPasswordFocusChanged: (Boolean) -> Unit,
-    isTermsAccepted: Boolean,
-    onTermsAcceptedChange: (Boolean) -> Unit,
+    state: SignUpUiState,
+    onEvent: (SignUpEvent) -> Unit,
     heightSizeClass: WindowHeightSizeClass,
     onBackClick: () -> Unit,
-    onSignUpClick: () -> Unit,
     onGoogleSignUpClick: () -> Unit,
     onTermsClick: () -> Unit,
     onPrivacyClick: () -> Unit,
-    isEmailSignUpEnabled: Boolean,
-    areGeneralActionsEnabled: Boolean,
-    scrollState: ScrollState,
-    isFullNameActuallyValid: Boolean,
-    fullNameErrorMessage: String?,
-    isEmailActuallyValid: Boolean,
-    emailErrorMessage: String?,
-    confirmPasswordErrorMessage: String?,
+    scrollState: ScrollState
 ) {
     val verticalSpacing = when (heightSizeClass) {
         WindowHeightSizeClass.Expanded -> 16.dp
         WindowHeightSizeClass.Medium -> 12.dp
         else -> 8.dp
-    }
-    val passwordRequirementsList = remember(password, isPasswordFocused)
-    {
-        if (isPasswordFocused) {
-            listOf(
-                PasswordFieldRequirementStatus("Minimum 8 characters", hasMinLength(password)),
-                PasswordFieldRequirementStatus("1 uppercase", hasUppercase(password)),
-                PasswordFieldRequirementStatus("1 lowercase", hasLowercase(password)),
-                PasswordFieldRequirementStatus("1 digit", hasDigit(password)),
-                PasswordFieldRequirementStatus("1 special char", hasSpecialChar(password))
-            )
-        } else {
-            null
-        }
     }
 
     Column(
@@ -472,38 +291,35 @@ private fun SignUpPortraitLayout(
 
         FormField(
             label = "Full Name",
-            value = fullName,
-            onValueChange = onFullNameChange,
-            isFocused = isFullNameFocused,
-            onFocusChanged = onFullNameFocusChanged,
-            isFieldValid = isFullNameActuallyValid,
-            errorMessage = fullNameErrorMessage,
+            value = state.fullName,
+            onValueChange = { onEvent(SignUpEvent.FullNameChanged(it)) },
+            isFocused = state.hasFullNameBeenFocused,
+            onFocusChanged = { onEvent(SignUpEvent.FullNameFocusLost) },
+            errorMessage = state.fullNameError,
         )
 
         Spacer(modifier = Modifier.height(verticalSpacing))
 
         FormField(
             label = "Email",
-            value = email,
-            onValueChange = onEmailChange,
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
-            isFocused = isEmailFocused,
-            onFocusChanged = onEmailFocusChanged,
-            isFieldValid = isEmailActuallyValid,
-            errorMessage = emailErrorMessage,
+            value = state.email,
+            onValueChange = { onEvent(SignUpEvent.EmailChanged(it)) },
+            isFocused = state.hasFullNameBeenFocused,
+            onFocusChanged = { onEvent(SignUpEvent.EmailFocusLost) },
+            errorMessage = state.emailError,
         )
 
         Spacer(modifier = Modifier.height(verticalSpacing))
 
         PasswordField(
             label = "Password",
-            value = password,
-            onValueChange = onPasswordChange,
-            isPasswordVisible = isPasswordVisible,
-            onTogglePasswordVisibility = onTogglePasswordVisibility,
-            isFocused = isPasswordFocused,
-            onFocusChanged = onPasswordFocusChanged,
-            passwordRequirements = passwordRequirementsList,
+            value = state.password,
+            onValueChange = { onEvent(SignUpEvent.PasswordChanged(it)) },
+            isPasswordVisible = state.isPasswordVisible,
+            onTogglePasswordVisibility = { onEvent(SignUpEvent.TogglePasswordVisibility)},
+            isFocused = state.hasPasswordFocused,
+            onFocusChanged = { onEvent(SignUpEvent.PasswordFocusLost)},
+            passwordRequirements = state.passwordRequirements,
             errorMessage = null,
         )
 
@@ -511,34 +327,34 @@ private fun SignUpPortraitLayout(
 
         PasswordField(
             label = "Confirm Password",
-            value = confirmPassword,
-            onValueChange = onConfirmPasswordChange,
-            isPasswordVisible = isConfirmPasswordVisible,
-            onTogglePasswordVisibility = onToggleConfirmPasswordVisibility,
-            isFocused = isConfirmPasswordFocused,
-            onFocusChanged = onConfirmPasswordFocusChanged,
-            errorMessage = confirmPasswordErrorMessage,
+            value = state.confirmPassword,
+            onValueChange = { onEvent(SignUpEvent.ConfirmPasswordChanged(it)) },
+            isPasswordVisible = state.isConfirmPasswordVisible,
+            onTogglePasswordVisibility = { onEvent(SignUpEvent.ToggleConfirmPasswordVisibility)},
+            isFocused = state.hasConfirmPasswordFocused,
+            onFocusChanged = { onEvent(SignUpEvent.ConfirmPasswordFocusLost)},
+            errorMessage = state.confirmPasswordError,
         )
 
         Spacer(modifier = Modifier.height(verticalSpacing))
 
         TermsAndConditionsCheckbox(
-            isChecked = isTermsAccepted,
-            onCheckedChange = onTermsAcceptedChange,
+            isChecked = state.isTermsAccepted,
+            onCheckedChange = { onEvent(SignUpEvent.TermsAcceptedChanged(it)) },
             onTermsClick = onTermsClick,
             onPrivacyClick = onPrivacyClick,
-            enabled = areGeneralActionsEnabled
+            enabled = !state.isLoading
         )
 
         Spacer(modifier = Modifier.height(verticalSpacing * 1.5f))
 
         AnimatedCustomButton(
-            onClick = onSignUpClick,
+            onClick = { onEvent(SignUpEvent.SignUpClicked) },
             text = "Sign up",
             backgroundColor = MaterialTheme.colorScheme.primary,
             textColor = MaterialTheme.colorScheme.onPrimary,
             modifier = Modifier.fillMaxWidth(),
-            enabled = isEmailSignUpEnabled // Specific enabled state for this button
+            enabled = state.isSignUpButtonEnabled // Specific enabled state for this button
         )
 
 
@@ -556,42 +372,14 @@ private fun SignUpPortraitLayout(
 
 @Composable
 private fun SignUpLandscapeLayout(
-    fullName: String,
-    onFullNameChange: (String) -> Unit,
-    isFullNameFocused: Boolean,
-    onFullNameFocusChanged: (Boolean) -> Unit,
-    email: String,
-    onEmailChange: (String) -> Unit,
-    isEmailFocused: Boolean,
-    onEmailFocusChanged: (Boolean) -> Unit,
-    password: String,
-    onPasswordChange: (String) -> Unit,
-    isPasswordVisible: Boolean,
-    onTogglePasswordVisibility: () -> Unit,
-    onToggleConfirmPasswordVisibility: () -> Unit,
-    isPasswordFocused: Boolean,
-    onPasswordFocusChanged: (Boolean) -> Unit,
-    confirmPassword: String,
-    onConfirmPasswordChange: (String) -> Unit,
-    isConfirmPasswordVisible: Boolean,
-    isConfirmPasswordFocused: Boolean,
-    onConfirmPasswordFocusChanged: (Boolean) -> Unit,
-    isTermsAccepted: Boolean,
-    onTermsAcceptedChange: (Boolean) -> Unit,
+    state: SignUpUiState,
+    onEvent: (SignUpEvent) -> Unit,
     heightSizeClass: WindowHeightSizeClass,
     onBackClick: () -> Unit,
-    onSignUpClick: () -> Unit,
     onGoogleSignUpClick: () -> Unit,
     onTermsClick: () -> Unit,
     onPrivacyClick: () -> Unit,
-    scrollState: ScrollState,
-    isEmailSignUpEnabled: Boolean,
-    areGeneralActionsEnabled: Boolean,
-    isFullNameActuallyValid: Boolean,
-    fullNameErrorMessage: String?,
-    isEmailActuallyValid: Boolean,
-    emailErrorMessage: String?,
-    confirmPasswordErrorMessage: String?,
+    scrollState: ScrollState
 ) {
     val verticalSpacing = when (heightSizeClass) {
         WindowHeightSizeClass.Expanded -> 12.dp
@@ -599,26 +387,10 @@ private fun SignUpLandscapeLayout(
         else -> 6.dp
     }
 
-    val passwordRequirementsList = remember(password, isPasswordFocused)
-    {
-        if (isPasswordFocused) {
-            listOf(
-                PasswordFieldRequirementStatus("Minimum 8 characters", hasMinLength(password)),
-                PasswordFieldRequirementStatus("1 uppercase", hasUppercase(password)),
-                PasswordFieldRequirementStatus("1 lowercase", hasLowercase(password)),
-                PasswordFieldRequirementStatus("1 digit", hasDigit(password)),
-                PasswordFieldRequirementStatus("1 special char", hasSpecialChar(password))
-            )
-        } else {
-            null
-        }
-    }
-
     Column(
         modifier = Modifier
             .fillMaxSize()
             .verticalScroll(scrollState)
-            .padding(horizontal = 16.dp)
     ) {
         Box(
             modifier = Modifier
@@ -640,119 +412,84 @@ private fun SignUpLandscapeLayout(
 
         Spacer(modifier = Modifier.height(verticalSpacing))
 
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            Column(
-                modifier = Modifier.weight(1f),
-                verticalArrangement = Arrangement.spacedBy(verticalSpacing)
-            ) {
-                FormField(
-                    label = "Full Name",
-                    value = fullName,
-                    onValueChange = onFullNameChange,
-                    isFocused = isFullNameFocused,
-                    onFocusChanged = onFullNameFocusChanged,
-                    isFieldValid = isFullNameActuallyValid,
-                    errorMessage = fullNameErrorMessage,
-                )
+        FormField(
+            label = "Full Name",
+            value = state.fullName,
+            onValueChange = { onEvent(SignUpEvent.FullNameChanged(it)) },
+            isFocused = state.hasFullNameBeenFocused,
+            onFocusChanged = { onEvent(SignUpEvent.FullNameFocusLost) },
+            errorMessage = state.fullNameError,
+        )
 
-                FormField(
-                    label = "Email",
-                    value = email,
-                    onValueChange = onEmailChange,
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
-                    isFocused = isEmailFocused,
-                    onFocusChanged = onEmailFocusChanged,
-                    isFieldValid = isEmailActuallyValid,
-                    errorMessage = emailErrorMessage,
-                )
-            }
+        Spacer(modifier = Modifier.height(verticalSpacing))
 
-            Column(
-                modifier = Modifier.weight(1f),
-                verticalArrangement = Arrangement.spacedBy(verticalSpacing)
-            ) {
-                PasswordField(
-                    label = "Password",
-                    value = password,
-                    onValueChange = { newValue ->
-                        if (newValue.length <= MAX_PASSWORD_LENGTH) {
-                            onPasswordChange(newValue)
-                        }
-                    },
-                    isPasswordVisible = isPasswordVisible,
-                    onTogglePasswordVisibility = onTogglePasswordVisibility,
-                    isFocused = isPasswordFocused,
-                    onFocusChanged = onPasswordFocusChanged,
-                    passwordRequirements = passwordRequirementsList,
-                    errorMessage = null,
-                )
+        FormField(
+            label = "Email",
+            value = state.email,
+            onValueChange = { onEvent(SignUpEvent.EmailChanged(it)) },
+            isFocused = state.hasFullNameBeenFocused,
+            onFocusChanged = { onEvent(SignUpEvent.EmailFocusLost) },
+            errorMessage = state.emailError,
+        )
 
-                PasswordField(
-                    label = "Confirm Password",
-                    value = confirmPassword,
-                    onValueChange ={ newValue ->
-                        if (newValue.length <= MAX_PASSWORD_LENGTH) {
-                            onConfirmPasswordChange(newValue)
-                        }
-                    },
-                    onTogglePasswordVisibility = onToggleConfirmPasswordVisibility,
-                    isPasswordVisible = isConfirmPasswordVisible,
-                    isFocused = isConfirmPasswordFocused,
-                    onFocusChanged = onConfirmPasswordFocusChanged,
-                    errorMessage = confirmPasswordErrorMessage,
-                )
-            }
-        }
+        Spacer(modifier = Modifier.height(verticalSpacing))
+
+        PasswordField(
+            label = "Password",
+            value = state.password,
+            onValueChange = { onEvent(SignUpEvent.PasswordChanged(it)) },
+            isPasswordVisible = state.isPasswordVisible,
+            onTogglePasswordVisibility = { onEvent(SignUpEvent.TogglePasswordVisibility)},
+            isFocused = state.hasPasswordFocused,
+            onFocusChanged = { onEvent(SignUpEvent.PasswordFocusLost)},
+            passwordRequirements = state.passwordRequirements,
+            errorMessage = null,
+        )
+
+        Spacer(modifier = Modifier.height(verticalSpacing))
+
+        PasswordField(
+            label = "Confirm Password",
+            value = state.confirmPassword,
+            onValueChange = { onEvent(SignUpEvent.ConfirmPasswordChanged(it)) },
+            isPasswordVisible = state.isConfirmPasswordVisible,
+            onTogglePasswordVisibility = { onEvent(SignUpEvent.ToggleConfirmPasswordVisibility)},
+            isFocused = state.hasConfirmPasswordFocused,
+            onFocusChanged = { onEvent(SignUpEvent.ConfirmPasswordFocusLost)},
+            errorMessage = state.confirmPasswordError,
+        )
 
         Spacer(modifier = Modifier.height(verticalSpacing))
 
         TermsAndConditionsCheckbox(
-            isChecked = isTermsAccepted,
-            onCheckedChange = onTermsAcceptedChange,
+            isChecked = state.isTermsAccepted,
+            onCheckedChange = { onEvent(SignUpEvent.TermsAcceptedChanged(it)) },
             onTermsClick = onTermsClick,
             onPrivacyClick = onPrivacyClick,
-            modifier = Modifier.fillMaxWidth(),
-            enabled = areGeneralActionsEnabled
+            enabled = !state.isLoading
         )
 
         Spacer(modifier = Modifier.height(verticalSpacing * 1.5f))
 
-        Row(
+        AnimatedCustomButton(
+            onClick = { onEvent(SignUpEvent.SignUpClicked) },
+            text = "Sign up",
+            backgroundColor = MaterialTheme.colorScheme.primary,
+            textColor = MaterialTheme.colorScheme.onPrimary,
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(16.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Column(
-                modifier = Modifier.weight(1f),
-                verticalArrangement = Arrangement.spacedBy(verticalSpacing)
-            ) {
-                AnimatedCustomButton(
-                    onClick = onSignUpClick,
-                    text = "Sign up",
-                    backgroundColor = MaterialTheme.colorScheme.primary,
-                    textColor = MaterialTheme.colorScheme.onPrimary,
-                    modifier = Modifier.fillMaxWidth(),
-                    enabled = isEmailSignUpEnabled
-                )
-            }
+            enabled = state.isSignUpButtonEnabled // Specific enabled state for this button
+        )
 
 
-            Column(
-                modifier = Modifier.weight(1f),
-                verticalArrangement = Arrangement.spacedBy(verticalSpacing)
-            ) {
-                GoogleButton(
-                    onClick = onGoogleSignUpClick,
-                    text = "Continue with Google",
-                    backgroundColor = MaterialTheme.colorScheme.surfaceVariant,
-                    textColor = MaterialTheme.colorScheme.onBackground,
-                    modifier = Modifier.fillMaxWidth(),
-                )
-            }
-        }
+        GoogleButton(
+            onClick = onGoogleSignUpClick,
+            text = "Continue with Google",
+            backgroundColor = MaterialTheme.colorScheme.surfaceVariant,
+            textColor = MaterialTheme.colorScheme.onBackground,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = verticalSpacing),
+        )
     }
 }
 
@@ -763,7 +500,7 @@ private fun TermsAndConditionsCheckbox(
     onTermsClick: () -> Unit,
     onPrivacyClick: () -> Unit,
     modifier: Modifier = Modifier,
-    enabled: Boolean // Added enabled parameter
+    enabled: Boolean
 ) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
@@ -780,7 +517,7 @@ private fun TermsAndConditionsCheckbox(
                 checkmarkColor = MaterialTheme.colorScheme.onPrimary
             ),
             modifier = Modifier.size(24.dp),
-            enabled = enabled // Apply enabled to Checkbox
+            enabled = enabled
         )
         Spacer(modifier = Modifier.width(8.dp))
         Text(
@@ -809,19 +546,3 @@ private fun TermsAndConditionsCheckbox(
         )
     }
 }
-
-fun isValidFullName(fullName: String): Boolean {
-    val nameRegex = Regex("^[\\p{L} .'-]{2,100}$")
-    return nameRegex.matches(fullName.trim())
-}
-
-fun isValidEmail(email: String): Boolean {
-    return Patterns.EMAIL_ADDRESS.matcher(email.trim()).matches() && email.trim().length <= 254
-}
-
-//password
-fun hasMinLength(password: String) = password.length >= 8
-fun hasUppercase(password: String) = password.any { it.isUpperCase() }
-fun hasLowercase(password: String) = password.any { it.isLowerCase() }
-fun hasDigit(password: String) = password.any { it.isDigit() }
-fun hasSpecialChar(password: String) = password.any { "!@#\$%^&*()_+{}[]|:;\"'<>,.?/~`-=".contains(it) }

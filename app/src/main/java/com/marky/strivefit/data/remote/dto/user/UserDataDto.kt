@@ -3,7 +3,7 @@ package com.marky.strivefit.data.remote.dto.user
 import androidx.annotation.Keep
 import com.google.firebase.firestore.DocumentId
 import com.google.firebase.firestore.ServerTimestamp
-import java.security.Timestamp
+import com.google.firebase.Timestamp
 
 @Keep
 data class UserDataDto(
@@ -17,6 +17,10 @@ data class UserDataDto(
     var sex: String? = null,
     var heightCm: Int? = null,
     var weightKg: Double? = null,
+
+    //gamify
+    var xp: Int = 0,
+    var level: Int = 1,
 
     // App-specific preferences/info
     var experienceLevel: String? = null, // e.g., ExperienceLevel.BEGINNER.name
@@ -47,6 +51,8 @@ data class UserDataDto(
         sex = null,
         heightCm = null,
         weightKg = null,
+        xp = 0,
+        level = 1,
         experienceLevel = null,
         fcmToken = null,
         availableEquipmentDto = emptyList(),

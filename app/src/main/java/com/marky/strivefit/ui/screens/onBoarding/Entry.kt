@@ -1,13 +1,38 @@
-package com.marky.strivefit.ui.screens.userSetup
+package com.marky.strivefit.ui.screens.onBoarding
 
-import androidx.compose.animation.*
-import androidx.compose.animation.core.*
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.EaseInOutQuad
+import androidx.compose.animation.core.EaseOutQuad
+import androidx.compose.animation.core.MutableTransitionState
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
@@ -20,18 +45,30 @@ import androidx.compose.ui.unit.dp
 import com.marky.strivefit.ui.components.AnimatedCustomButton
 import kotlinx.coroutines.delay
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun Entry(isSignedIn: Boolean = false, onContinueClick: (String) -> Unit) {
+fun Entry(
+    userName: String? = null,
+    onContinueClick: (String) -> Unit
+) {
     val welcomeState = remember { MutableTransitionState(true) }
-    val nameInputState = remember { MutableTransitionState(false) }
-    val nameInput = remember { mutableStateOf(TextFieldValue()) }
 
-    LaunchedEffect(Unit) {
-        delay(4000)
-        welcomeState.targetState = false
-        delay(1000)
-        nameInputState.targetState = true
+    val nameInputState = remember { MutableTransitionState(false) }
+    var nameInput by remember { mutableStateOf(TextFieldValue()) }
+
+    LaunchedEffect(entryType, userName) {
+        when (entryType) {
+            EntryType.GUEST -> {
+                delay(4000)
+                welcomeState.targetState = false
+                delay(1000)
+                nameInputState.targetState = true
+            }
+            EntryType.SIGNUP, EntryType.LOGIN -> {
+                requireNotNull(userName) { "User name must be provided for SIGNUP or LOGIN entry types." }
+                delay(3500)
+                onContinueClick(userName)
+            }
+        }
     }
 
     Box(
@@ -43,47 +80,45 @@ fun Entry(isSignedIn: Boolean = false, onContinueClick: (String) -> Unit) {
             enter = fadeIn(animationSpec = tween(1000)),
             exit = fadeOut(animationSpec = tween(1000))
         ) {
-            WelcomeMessage(isSignedIn)
+            WelcomeMessage(entryType = entryType, userName = userName)
         }
 
-        AnimatedVisibility(
-            visibleState = nameInputState,
-            enter = fadeIn(animationSpec = tween(1200)) +
-                    slideInVertically(
-                        initialOffsetY = { it / 4 },
-                        animationSpec = tween(1500, easing = EaseInOutQuad)
-                    )
-        ) {
-            NameInputSection(
-                nameInput.value,
-                { nameInput.value = it },
-                { onContinueClick(nameInput.value.text) }
-            )
+        if (entryType == EntryType.GUEST) {
+            AnimatedVisibility(
+                visibleState = nameInputState,
+                enter = fadeIn(animationSpec = tween(1200)) +
+                        slideInVertically(
+                            initialOffsetY = { it / 4 },
+                            animationSpec = tween(1500, easing = EaseInOutQuad)
+                        )
+            ) {
+                NameInputSection(
+                    value = nameInput,
+                    onValueChange = { nameInput = it },
+                    onContinueClick = { onContinueClick(nameInput.text) }
+                )
+            }
         }
     }
 }
 
 @Composable
-fun WelcomeMessage(isSignedIn: Boolean) {
+private fun WelcomeMessage(entryType: EntryType, userName: String?) {
     val textScale = remember { Animatable(0.9f) }
     val textOpacity = remember { Animatable(0f) }
     val subtextOpacity = remember { Animatable(0f) }
 
     LaunchedEffect(Unit) {
-        textOpacity.animateTo(
-            targetValue = 1f,
-            animationSpec = tween(durationMillis = 1000, easing = EaseOutQuad)
-        )
-        subtextOpacity.animateTo(
-            targetValue = 1f,
-            animationSpec = tween(durationMillis = 1000, delayMillis = 500, easing = EaseOutQuad)
-        )
+        textOpacity.animateTo(1f, animationSpec = tween(1000, easing = EaseOutQuad))
+        subtextOpacity.animateTo(1f, animationSpec = tween(1000, 500, EaseOutQuad))
     }
 
-    val subtextMessage = if (isSignedIn) {
-        "Finish signing up"
-    } else {
-        "Entering as guest"
+    val (welcomeText, subtextMessage) = remember(entryType, userName) {
+        when (entryType) {
+            EntryType.SIGNUP -> "Welcome, ${userName}!" to "Thanks for signing up."
+            EntryType.LOGIN -> "Welcome back, ${userName}!" to "Let's get right to it."
+            EntryType.GUEST -> "Hi! Let's get you set up" to "Entering as a guest."
+        }
     }
 
     Box(
@@ -97,8 +132,8 @@ fun WelcomeMessage(isSignedIn: Boolean) {
             verticalArrangement = Arrangement.Center
         ) {
             Text(
-                text = "Hi! Let's have you set up",
-                style = MaterialTheme.typography.headlineMedium,
+                text = welcomeText,
+                style = MaterialTheme.typography.headlineLarge,
                 color = MaterialTheme.colorScheme.onBackground,
                 textAlign = TextAlign.Center,
                 modifier = Modifier
@@ -124,7 +159,7 @@ fun WelcomeMessage(isSignedIn: Boolean) {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun NameInputSection(
+private fun NameInputSection(
     value: TextFieldValue,
     onValueChange: (TextFieldValue) -> Unit,
     onContinueClick: () -> Unit

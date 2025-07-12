@@ -1,6 +1,5 @@
 package com.marky.strivefit.ui.components
 
-import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -11,7 +10,6 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.unit.dp
@@ -24,7 +22,6 @@ fun FormField(
     keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
     isFocused: Boolean,
     onFocusChanged: (Boolean) -> Unit,
-    isFieldValid: Boolean,
     errorMessage: String?
 ) {
     val showErrorDisplay = errorMessage != null && !isFocused && value.isNotEmpty()
@@ -45,9 +42,9 @@ fun FormField(
                 .fillMaxWidth()
                 .onFocusChanged { onFocusChanged(it.isFocused) },
             colors = OutlinedTextFieldDefaults.colors(
-                focusedBorderColor = if (isFocused && isFieldValid && value.isNotEmpty()) MaterialTheme.colorScheme.tertiary /* Green */ else MaterialTheme.colorScheme.primary,
+                focusedBorderColor = if (isFocused && value.isNotEmpty()) MaterialTheme.colorScheme.tertiary /* Green */ else MaterialTheme.colorScheme.primary,
                 unfocusedBorderColor = if (showErrorDisplay) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.outline,
-                errorBorderColor = MaterialTheme.colorScheme.error, // Used by isError = true for other internal stylings
+                errorBorderColor = MaterialTheme.colorScheme.error,
                 focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
                 unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
                 cursorColor = MaterialTheme.colorScheme.primary,
@@ -57,12 +54,12 @@ fun FormField(
             singleLine = true,
             keyboardOptions = keyboardOptions,
             shape = RoundedCornerShape(8.dp),
-            isError = showErrorDisplay // Informs the TextField it's in an error state
+            isError = showErrorDisplay
         )
 
         if (showErrorDisplay) {
             Text(
-                text = errorMessage!!, // Safe due to showErrorDisplay condition
+                text = errorMessage!!,
                 color = MaterialTheme.colorScheme.error,
                 style = MaterialTheme.typography.bodySmall,
                 modifier = Modifier.padding(start = 16.dp, top = 4.dp)

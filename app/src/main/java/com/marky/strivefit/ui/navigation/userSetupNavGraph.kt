@@ -11,11 +11,10 @@ import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
-import androidx.navigation.navigation
 import com.marky.strivefit.ui.screens.userSetup.LoadingScreen
 import com.marky.strivefit.ui.screens.userSetup.AgeInputScreen
 import com.marky.strivefit.ui.screens.userSetup.BodyFocusAreasScreen
-import com.marky.strivefit.ui.screens.userSetup.Entry
+import com.marky.strivefit.ui.screens.onBoarding.Entry
 import com.marky.strivefit.ui.screens.userSetup.EquipmentSelectionScreen
 import com.marky.strivefit.ui.screens.userSetup.ExperienceLevelScreen
 import com.marky.strivefit.ui.screens.userSetup.GoalsInputScreen
@@ -23,41 +22,16 @@ import com.marky.strivefit.ui.screens.userSetup.HeightInputScreen
 import com.marky.strivefit.ui.screens.userSetup.WeightInputScreen
 import com.marky.strivefit.ui.screens.userSetup.WorkoutPreferencesScreen
 import com.marky.strivefit.ui.viewModel.NavOrigin
+import kotlinx.serialization.Serializable
 import popTransitionAnimation
 import transitionAnimation
 
-fun NavGraphBuilder.userSetupNavGraph(navController: NavHostController) {
+fun NavGraphBuilder.UserSetupNavGraph(navController: NavHostController) {
 
     val slideInLeft = transitionAnimation(AnimatedContentTransitionScope.SlideDirection.Left, 300)
     val slideOutLeft = popTransitionAnimation(AnimatedContentTransitionScope.SlideDirection.Left, 300)
     val slideInRight = transitionAnimation(AnimatedContentTransitionScope.SlideDirection.Right, 300)
     val slideOutRight = popTransitionAnimation(AnimatedContentTransitionScope.SlideDirection.Right, 300)
-    composable(
-        route = "SetupEntry?origin={origin}",
-        arguments = listOf(
-            navArgument("origin") {
-                defaultValue = "user"
-            }
-        ),
-        enterTransition = {
-            fadeIn(animationSpec = tween(durationMillis = 300))
-        },
-        exitTransition = {
-            fadeOut(animationSpec = tween(durationMillis = 300))
-        },
-        popEnterTransition = {
-            fadeIn(animationSpec = tween(durationMillis = 300))
-        },
-        popExitTransition = {
-            fadeOut(animationSpec = tween(durationMillis = 300))
-        }
-    ) { backStackEntry ->
-        SetupEntryScreen(
-            backStackEntry,
-            navController
-        )
-    }
-
     composable(
         route = "age_input",
         enterTransition = { slideInLeft },
@@ -176,21 +150,4 @@ fun NavGraphBuilder.userSetupNavGraph(navController: NavHostController) {
             }
         )
     }
-}
-
-@Composable
-fun SetupEntryScreen(
-    backStackEntry: NavBackStackEntry,
-    navController: NavHostController
-) {
-    val origin = backStackEntry.arguments?.getString("origin") ?: "guest"
-    val navOrigin: NavOrigin = viewModel()
-    navOrigin.setOrigin(origin)
-
-    Entry(
-        isSignedIn = origin == "guest",
-        onContinueClick = { nickname ->
-            navController.navigate("age_input")
-        }
-    )
 }

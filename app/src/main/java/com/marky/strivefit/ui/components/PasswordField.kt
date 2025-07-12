@@ -39,11 +39,8 @@ import androidx.compose.ui.unit.dp
 import com.composables.icons.lucide.Eye
 import com.composables.icons.lucide.EyeOff
 import com.composables.icons.lucide.Lucide
+import com.marky.strivefit.ui.viewModel.PasswordFieldRequirementStatus
 
-data class PasswordFieldRequirementStatus(
-    val message: String,
-    val isValid: Boolean
-)
 
 @Composable
 fun PasswordField(
@@ -53,14 +50,14 @@ fun PasswordField(
     isPasswordVisible: Boolean,
     onTogglePasswordVisibility: () -> Unit,
     isFocused: Boolean,
-    onFocusChanged: (Boolean) -> Unit,
+    onFocusChanged: (isFocused: Boolean) -> Unit,
     modifier: Modifier = Modifier,
     keyboardOptions: KeyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password, imeAction = ImeAction.Done),
     keyboardActions: KeyboardActions = KeyboardActions.Default,
     errorMessage: String? = null,
     passwordRequirements: List<PasswordFieldRequirementStatus>? = null,
 ) {
-    val areAllRequirementsMet = passwordRequirements?.all { it.isValid } ?: true
+    val areAllRequirementsMet = passwordRequirements?.all { it.isSatisfied } != false
 
     val colorScheme = MaterialTheme.colorScheme
     val tertiaryColor = colorScheme.tertiary
@@ -168,7 +165,7 @@ fun PasswordField(
                 passwordRequirements.forEach { requirement ->
                     ValidationHintItem(
                         text = requirement.message,
-                        isValid = requirement.isValid
+                        isValid = requirement.isSatisfied
                     )
                 }
             }
