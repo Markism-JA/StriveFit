@@ -4,6 +4,7 @@ import UserProfileUpdater
 import android.util.Patterns
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.google.android.gms.auth.api.identity.BeginSignInRequest
 import com.google.firebase.auth.FirebaseAuthUserCollisionException
 import com.google.firebase.auth.FirebaseAuthWeakPasswordException
 import com.marky.strivefit.data.local.repository.AuthRepository
@@ -151,7 +152,29 @@ class SignUpViewModel @Inject constructor(
             }
             SignUpEvent.PasswordFocusLost -> _uiState.update { it.copy(hasPasswordFocused = true) }
             SignUpEvent.ConfirmPasswordFocusLost -> _uiState.update { it.copy(hasConfirmPasswordFocused = true) }
-            SignUpEvent.GoogleSignUpClicked -> viewModelScope.launch { _resultFlow.emit(SignUpResult.LaunchGoogleSignIn) }
+            SignUpEvent.GoogleSignUpClicked -> {
+                val signInRequest = BeginSignInRequest.builder()
+                    .setGoogleIdTokenRequestOptions(
+                        BeginSignInRequest.GoogleIdTokenRequestOptions.builder()
+                            .setSupported(true)
+                            .setServerClientId("YOUR_WEB_CLIENT_ID")
+                            .setFilterByAuthorizedAccounts(false)
+                            .build()
+                    )
+                    .build()
+                SignUpEvent.GoogleSignUpClicked -> {
+                val signInRequest = BeginSignInRequest.builder()
+                    .setGoogleIdTokenRequestOptions(
+                        BeginSignInRequest.GoogleIdTokenRequestOptions.builder()
+                            .setSupported(true)
+                            .setServerClientId("YOUR_WEB_CLIENT_ID")
+                            .setFilterByAuthorizedAccounts(false)
+                            .build()
+                    )
+                    .build()
+                viewModelScope.launch { _resultFlow.emit(SignUpResult.LaunchGoogleSignIn(signInRequest)) }
+            }
+            }
             is SignUpEvent.GoogleSignInSucceeded -> performGoogleSignIn(event.idToken)
         }
     }
