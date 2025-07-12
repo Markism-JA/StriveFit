@@ -39,8 +39,8 @@ class AuthViewModel @Inject constructor(
         viewModelScope.launch {
             _authState.value = AuthUiState.Loading
             try {
-                val result = authRepository.signInWithEmailAndPassword(email, pass)
-                _authState.value = AuthUiState.Success(result.user!!.uid)
+                val result = authRepository.signInWithEmail(email, pass).getOrThrow()
+                _authState.value = AuthUiState.Success(result.uid)
             } catch (e: Exception) {
                 _authState.value = AuthUiState.Error(e.message ?: "An unknown error occurred")
             }
@@ -51,8 +51,8 @@ class AuthViewModel @Inject constructor(
         viewModelScope.launch {
             _authState.value = AuthUiState.Loading
             try {
-                val result = authRepository.signInWithGoogle(idToken)
-                _authState.value = AuthUiState.Success(result.user!!.uid)
+                val result = authRepository.signInWithGoogle(idToken).getOrThrow()
+                _authState.value = AuthUiState.Success(result.user.uid)
             } catch (e: Exception) {
                 _authState.value = AuthUiState.Error(e.message ?: "An unknown error occurred")
             }
