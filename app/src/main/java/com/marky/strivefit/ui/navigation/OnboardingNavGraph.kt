@@ -63,7 +63,7 @@ fun NavGraphBuilder.OnboardingNavGraph(navController: NavHostController) {
             SignUpScreen(
                 onBackClick = { navController.popBackStack() },
                 onSignUpSuccess = { userName ->
-                    navController.navigate(PostAuthWelcome(userName))
+                    navController.navigate(PostAuthWelcome(userName = userName))
                 }
             )
         }
@@ -87,7 +87,7 @@ fun NavGraphBuilder.OnboardingNavGraph(navController: NavHostController) {
             Login(
                 onBackClick = { navController.popBackStack() },
                 onSuccessfulLogin = { userName ->
-                    navController.navigate(PostAuthWelcome(userName))
+                    navController.navigate(PostAuthWelcome(userName = userName))
                 },
                 onSignupClick = { navController.navigate(SignUp) }
             )
@@ -101,10 +101,10 @@ fun NavGraphBuilder.OnboardingNavGraph(navController: NavHostController) {
         }
 
         composable<PostAuthWelcome> {
-            val userName = it.arguments?.getString("userName")
+            val args = it.toRoute<PostAuthWelcome>()
             Entry(
                 entryType = com.marky.strivefit.ui.screens.onBoarding.EntryType.LOGIN,
-                userName = userName,
+                userName = args.userName,
                 onContinueClick = { navController.navigate(UserSetup) }
             )
         }

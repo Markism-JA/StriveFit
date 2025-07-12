@@ -8,7 +8,8 @@ import kotlinx.serialization.Serializable
 @Serializable object SignUp
 @Serializable object Login
 @Serializable object GuestLoading
-@Serializable object PostAuthWelcome
+@Serializable data class PostAuthWelcome(val userName: String)
+@Serializable object UserSetup
 @Serializable object root_router
 
 @Serializable object MainAppGraph
