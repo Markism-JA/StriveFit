@@ -109,7 +109,7 @@ fun Login(
         }
     }
 
-    val onGoogleLoginClick = {
+    val onGoogleLoginClick: () -> Unit = {
         val signInRequest = BeginSignInRequest.builder()
             .setGoogleIdTokenRequestOptions(
                 BeginSignInRequest.GoogleIdTokenRequestOptions.builder()
