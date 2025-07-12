@@ -1,6 +1,9 @@
 package com.marky.strivefit.ui.screens.onBoarding
 
+import android.app.Activity
+import android.content.IntentSender
 import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.IntentSenderRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import android.util.Patterns
 import androidx.compose.animation.AnimatedVisibility
@@ -24,10 +27,16 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.google.android.gms.auth.api.identity.BeginSignInRequest
+import com.google.android.gms.auth.api.identity.Identity
+import com.google.android.gms.common.api.ApiException
+import com.marky.strivefit.R
 import com.marky.strivefit.ui.components.AnimatedCustomButton
 import com.marky.strivefit.ui.components.FormField
 import com.marky.strivefit.ui.components.GoBackButton
@@ -41,8 +50,7 @@ import com.marky.strivefit.ui.viewModel.AuthViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
-// Assuming MAX_PASSWORD_LENGTH is defined elsewhere, e.g., in SignUp.kt or a constants file
-// If not, define it: const val MAX_PASSWORD_LENGTH = 64
+const val MAX_PASSWORD_LENGTH = 64
 
 @Composable
 fun Login(
@@ -232,7 +240,6 @@ fun Login(
                         onEmailChange = { email = it },
                         isEmailFocused = isEmailFocused,
                         onEmailFocusChanged = { isEmailFocused = it },
-                        isEmailFormatValid = isEmailFormatValid,
                         password = password,
                         onPasswordChange = { if (it.length <= MAX_PASSWORD_LENGTH) password = it },
                         isPasswordVisible = isPasswordVisible,
@@ -241,6 +248,7 @@ fun Login(
                         onPasswordFocusChanged = { isPasswordFocused = it },
                         onBackClick = animatedOnBackClick,
                         onLoginClick = performLoginAction,
+                        onGoogleLoginClick = onGoogleLoginClick,
                         onForgotPasswordClick = { if (areActionsEnabled) onForgotPasswordClick() },
                         onSignupClick = { if (areActionsEnabled) onSignupClick() },
                         scrollState = scrollState,
@@ -256,7 +264,6 @@ fun Login(
                         onEmailChange = { email = it },
                         isEmailFocused = isEmailFocused,
                         onEmailFocusChanged = { isEmailFocused = it },
-                        isEmailFormatValid = isEmailFormatValid,
                         password = password,
                         onPasswordChange = { if (it.length <= MAX_PASSWORD_LENGTH) password = it },
                         isPasswordVisible = isPasswordVisible,
@@ -265,6 +272,7 @@ fun Login(
                         onPasswordFocusChanged = { isPasswordFocused = it },
                         onBackClick = animatedOnBackClick,
                         onLoginClick = performLoginAction,
+                        onGoogleLoginClick = onGoogleLoginClick,
                         onForgotPasswordClick = { if (areActionsEnabled) onForgotPasswordClick() },
                         onSignupClick = { if (areActionsEnabled) onSignupClick() },
                         scrollState = scrollState,
@@ -299,7 +307,6 @@ private fun LoginPortraitLayout(
     onEmailChange: (String) -> Unit,
     isEmailFocused: Boolean,
     onEmailFocusChanged: (Boolean) -> Unit,
-    isEmailFormatValid: Boolean,
     password: String,
     onPasswordChange: (String) -> Unit,
     isPasswordVisible: Boolean,
@@ -319,7 +326,7 @@ private fun LoginPortraitLayout(
     areActionsEnabled: Boolean
 ) {
     val emailFieldError = when {
-        !isEmailFocused && email.isNotEmpty() && !isEmailFormatValid -> "Invalid email format."
+        !isEmailFocused && email.isNotEmpty() && !Patterns.EMAIL_ADDRESS.matcher(email.trim()).matches() -> "Invalid email format."
         loginError != null && (loginError.contains("email", ignoreCase = true) ||
                 loginError.contains("user not found", ignoreCase = true) ||
                 loginError.contains("no account", ignoreCase = true) ||
@@ -369,7 +376,6 @@ private fun LoginPortraitLayout(
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
             isFocused = isEmailFocused,
             onFocusChanged = onEmailFocusChanged,
-            isFieldValid = isEmailFormatValid && email.isNotEmpty(),
             errorMessage = if (isLoading) null else emailFieldError,
         )
 
@@ -435,8 +441,7 @@ private fun LoginPortraitLayout(
             textColor = MaterialTheme.colorScheme.onBackground,
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(vertical = verticalSpacing),
-            enabled = areActionsEnabled
+                .padding(vertical = verticalSpacing)
         )
 
         Spacer(modifier = Modifier.height(verticalSpacing))
@@ -462,7 +467,6 @@ private fun LoginLandscapeLayout(
     onEmailChange: (String) -> Unit,
     isEmailFocused: Boolean,
     onEmailFocusChanged: (Boolean) -> Unit,
-    isEmailFormatValid: Boolean,
     password: String,
     onPasswordChange: (String) -> Unit,
     isPasswordVisible: Boolean,
@@ -482,7 +486,7 @@ private fun LoginLandscapeLayout(
     areActionsEnabled: Boolean
 ) {
     val emailFieldError = when {
-        !isEmailFocused && email.isNotEmpty() && !isEmailFormatValid -> "Invalid email format."
+        !isEmailFocused && email.isNotEmpty() && !Patterns.EMAIL_ADDRESS.matcher(email.trim()).matches() -> "Invalid email format."
         loginError != null && (loginError.contains("email", ignoreCase = true) ||
                 loginError.contains("user not found", ignoreCase = true) ||
                 loginError.contains("no account", ignoreCase = true) ||
@@ -532,7 +536,6 @@ private fun LoginLandscapeLayout(
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
             isFocused = isEmailFocused,
             onFocusChanged = onEmailFocusChanged,
-            isFieldValid = isEmailFormatValid && email.isNotEmpty(),
             errorMessage = if (isLoading) null else emailFieldError,
         )
 
@@ -598,8 +601,7 @@ private fun LoginLandscapeLayout(
             textColor = MaterialTheme.colorScheme.onBackground,
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(vertical = verticalSpacing),
-            enabled = areActionsEnabled
+                .padding(vertical = verticalSpacing)
         )
 
         Spacer(modifier = Modifier.height(verticalSpacing))
