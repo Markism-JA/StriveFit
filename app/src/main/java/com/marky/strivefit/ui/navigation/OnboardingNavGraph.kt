@@ -8,9 +8,9 @@ import androidx.navigation.navigation
 import com.marky.strivefit.ui.navigation.TransitionAnimation.fadeInSpec
 import com.marky.strivefit.ui.navigation.TransitionAnimation.fadeOutSpec
 import com.marky.strivefit.ui.navigation.TransitionAnimation.slideAnimSpec
+import com.marky.strivefit.ui.screens.onBoaording.SignUpScreen
 import com.marky.strivefit.ui.screens.onBoarding.Entry
 import com.marky.strivefit.ui.screens.onBoarding.Login
-import com.marky.strivefit.ui.screens.onBoarding.SignUpScreen
 import com.marky.strivefit.ui.screens.onBoarding.WelcomeScreen
 
 fun NavGraphBuilder.OnboardingNavGraph(navController: NavHostController) {
@@ -60,7 +60,10 @@ fun NavGraphBuilder.OnboardingNavGraph(navController: NavHostController) {
             // This screen no longer has an onSignUpSuccess callback.
             // It relies on the AuthViewModel to change the global auth state.
             SignUpScreen(
-                onBackClick = { navController.popBackStack() }
+                onBackClick = { navController.popBackStack() },
+                onSignUpSuccess = { userName ->
+                    navController.navigate(PostAuthWelcome(userName))
+                }
             )
         }
 
@@ -82,12 +85,27 @@ fun NavGraphBuilder.OnboardingNavGraph(navController: NavHostController) {
         ) {
             Login(
                 onBackClick = { navController.popBackStack() },
+                onSuccessfulLogin = { userName ->
+                    navController.navigate(PostAuthWelcome(userName))
+                },
                 onSignupClick = { navController.navigate(SignUp) }
             )
         }
 
         composable<GuestLoading> {
-            Entry(onContinueClick = { navController.navigate(UserSetup) })
+            Entry(
+                entryType = com.marky.strivefit.ui.screens.onBoarding.EntryType.GUEST,
+                onContinueClick = { navController.navigate(UserSetup) }
+            )
+        }
+
+        composable<PostAuthWelcome> {
+            val userName = it.arguments?.getString("userName")
+            Entry(
+                entryType = com.marky.strivefit.ui.screens.onBoarding.EntryType.LOGIN,
+                userName = userName,
+                onContinueClick = { navController.navigate(UserSetup) }
+            )
         }
     }
 }

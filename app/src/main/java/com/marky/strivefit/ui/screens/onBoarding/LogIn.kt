@@ -49,8 +49,7 @@ fun Login(
     windowSizeClass: WindowSizeClass? = null,
     authViewModel: AuthViewModel = hiltViewModel(),
     onBackClick: () -> Unit = {},
-    onSuccessfulLogin: () -> Unit = {},
-    onGoogleLoginClick: () -> Unit = {}, // This should initiate the Google Sign-In flow
+    onSuccessfulLogin: (String) -> Unit = {},
     onForgotPasswordClick: () -> Unit = {},
     onSignupClick: () -> Unit = {}
 ) {
@@ -139,7 +138,7 @@ fun Login(
             is AuthUiState.Success -> {
                 isLoading = false
                 loginError = null
-                onSuccessfulLogin()
+                onSuccessfulLogin(state.userId)
                 authViewModel.resetAuthStateToIdle() // Reset after navigation
             }
             is AuthUiState.Error -> {
@@ -242,7 +241,6 @@ fun Login(
                         onPasswordFocusChanged = { isPasswordFocused = it },
                         onBackClick = animatedOnBackClick,
                         onLoginClick = performLoginAction,
-                        onGoogleLoginClick = { if (areActionsEnabled) onGoogleLoginClick() },
                         onForgotPasswordClick = { if (areActionsEnabled) onForgotPasswordClick() },
                         onSignupClick = { if (areActionsEnabled) onSignupClick() },
                         scrollState = scrollState,
@@ -267,7 +265,6 @@ fun Login(
                         onPasswordFocusChanged = { isPasswordFocused = it },
                         onBackClick = animatedOnBackClick,
                         onLoginClick = performLoginAction,
-                        onGoogleLoginClick = { if (areActionsEnabled) onGoogleLoginClick() },
                         onForgotPasswordClick = { if (areActionsEnabled) onForgotPasswordClick() },
                         onSignupClick = { if (areActionsEnabled) onSignupClick() },
                         scrollState = scrollState,
@@ -432,13 +429,14 @@ private fun LoginPortraitLayout(
 
 
         GoogleButton(
-            onClick = onGoogleLoginClick,
+            onClick = { onGoogleLoginClick() },
             text = "Continue with Google",
             backgroundColor = MaterialTheme.colorScheme.surfaceVariant,
             textColor = MaterialTheme.colorScheme.onBackground,
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(vertical = verticalSpacing),
+            enabled = areActionsEnabled
         )
 
         Spacer(modifier = Modifier.height(verticalSpacing))
@@ -594,13 +592,14 @@ private fun LoginLandscapeLayout(
 
 
         GoogleButton(
-            onClick = onGoogleLoginClick,
+            onClick = { onGoogleLoginClick() },
             text = "Continue with Google",
             backgroundColor = MaterialTheme.colorScheme.surfaceVariant,
             textColor = MaterialTheme.colorScheme.onBackground,
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(vertical = verticalSpacing),
+            enabled = areActionsEnabled
         )
 
         Spacer(modifier = Modifier.height(verticalSpacing))

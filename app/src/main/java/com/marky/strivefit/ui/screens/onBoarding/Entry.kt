@@ -47,6 +47,7 @@ import kotlinx.coroutines.delay
 
 @Composable
 fun Entry(
+    entryType: EntryType,
     userName: String? = null,
     onContinueClick: (String) -> Unit
 ) {

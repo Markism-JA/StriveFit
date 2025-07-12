@@ -75,6 +75,7 @@ fun SignUpScreen(
     signUpViewModel: SignUpViewModel = hiltViewModel(),
     windowSizeClass: WindowSizeClass? = null,
     onBackClick: () -> Unit = {},
+    onSignUpSuccess: (String) -> Unit = {}
 ) {
     val uiState by signUpViewModel.uiState.collectAsStateWithLifecycle()
     val snakebarHostState = remember { SnackbarHostState() }
@@ -106,6 +107,7 @@ fun SignUpScreen(
         signUpViewModel.resultFlow.collect { result ->
             when (result) {
                 is SignUpResult.Success -> {
+                    onSignUpSuccess(result.userId)
                 }
 
                 is SignUpResult.Error -> {

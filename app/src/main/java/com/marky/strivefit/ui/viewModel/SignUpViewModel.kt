@@ -94,9 +94,9 @@ sealed interface SignUpEvent {
 }
 
 sealed interface SignUpResult {
-    object Success : SignUpResult
+    data class Success(val userId: String) : SignUpResult
     data class Error(val message: String) : SignUpResult
-    object LaunchGoogleSignIn : SignUpResult
+    data class LaunchGoogleSignIn(val signInRequest: BeginSignInRequest) : SignUpResult
 }
 
 @HiltViewModel
@@ -265,7 +265,7 @@ class SignUpViewModel @Inject constructor(
                 userRepository.createUserProfileEmail(user.uid, user.email.toString(), state.fullName.trim())
                     .getOrThrow()
 
-                _resultFlow.emit(SignUpResult.Success)
+                _resultFlow.emit(SignUpResult.Success(user.uid))
 
             } catch (e: Exception) {
                 val errorMsg = when (e) {
@@ -303,7 +303,7 @@ class SignUpViewModel @Inject constructor(
                 }
 
                 // 3. All steps succeeded, emit the success result.
-                _resultFlow.emit(SignUpResult.Success)
+                _resultFlow.emit(SignUpResult.Success(signInResult.user.uid))
 
             } catch (e: Exception) {
                 // If any step failed, emit an error.
