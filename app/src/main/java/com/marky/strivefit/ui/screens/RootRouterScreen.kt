@@ -13,7 +13,7 @@ import com.marky.strivefit.ui.viewModel.MainViewModel
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import com.marky.strivefit.ui.navigation.MainApp
+import com.marky.strivefit.ui.navigation.MainAppGraph
 import com.marky.strivefit.ui.navigation.UserSetup
 import com.marky.strivefit.ui.navigation.Welcome
 
@@ -35,7 +35,7 @@ fun RootRouterScreen(
         val destination = when {
             !isSignedIn -> Welcome
             !isUserSetupComplete -> UserSetup
-            else -> MainApp
+            else -> MainAppGraph
         }
 
         navController.navigate(destination) {

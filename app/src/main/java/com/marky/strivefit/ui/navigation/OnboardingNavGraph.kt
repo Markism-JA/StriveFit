@@ -5,6 +5,7 @@ import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.composable
 import androidx.navigation.navigation
+import androidx.navigation.toRoute
 import com.marky.strivefit.ui.navigation.TransitionAnimation.fadeInSpec
 import com.marky.strivefit.ui.navigation.TransitionAnimation.fadeOutSpec
 import com.marky.strivefit.ui.navigation.TransitionAnimation.slideAnimSpec

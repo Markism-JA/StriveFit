@@ -28,5 +28,5 @@ fun RootNavHost() {
 fun AppState.route(): Any = when(this) {
     AppState.WELCOME -> Welcome
     AppState.USER_SETUP -> UserSetup
-    AppState.MAIN_APP -> MainApp
+    AppState.MAIN_APP -> MainAppGraph
 }
