@@ -12,6 +12,7 @@ import com.marky.strivefit.ui.screens.onBoaording.SignUpScreen
 import com.marky.strivefit.ui.screens.onBoarding.Entry
 import com.marky.strivefit.ui.screens.onBoarding.Login
 import com.marky.strivefit.ui.screens.onBoarding.WelcomeScreen
+import com.marky.strivefit.ui.navigation.PostAuthWelcome
 
 fun NavGraphBuilder.OnboardingNavGraph(navController: NavHostController) {
     navigation<OnboardingGraph>(
