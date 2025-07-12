@@ -1,12 +1,11 @@
 package com.marky.strivefit.ui.screens.onBoaording
 
-import androidx.compose.ui.res.stringResource
 import LegalContentType
 import android.app.Activity
 import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.IntentSenderRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.R
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -48,13 +47,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.google.android.gms.auth.api.identity.Identity
 import com.google.android.gms.common.api.ApiException
-import com.google.firebase.firestore.core.View
+import com.marky.strivefit.R
 import com.marky.strivefit.ui.components.AnimatedCustomButton
 import com.marky.strivefit.ui.components.FormField
 import com.marky.strivefit.ui.components.GoBackButton
@@ -128,7 +128,6 @@ fun SignUpScreen(
                             }
                         }
                 }
-                else -> {}
             }
         }
     }
@@ -306,7 +305,7 @@ private fun SignUpPortraitLayout(
             label = "Email",
             value = state.email,
             onValueChange = { onEvent(SignUpEvent.EmailChanged(it)) },
-            isFocused = state.hasFullNameBeenFocused,
+            isFocused = state.hasEmailBeenFocused,
             onFocusChanged = { onEvent(SignUpEvent.EmailFocusLost) },
             errorMessage = state.emailError,
         )
@@ -429,7 +428,7 @@ private fun SignUpLandscapeLayout(
             label = "Email",
             value = state.email,
             onValueChange = { onEvent(SignUpEvent.EmailChanged(it)) },
-            isFocused = state.hasFullNameBeenFocused,
+            isFocused = state.hasEmailBeenFocused,
             onFocusChanged = { onEvent(SignUpEvent.EmailFocusLost) },
             errorMessage = state.emailError,
         )
