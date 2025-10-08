@@ -1,3 +1,5 @@
+@file:Suppress("DEPRECATION")
+
 package com.marky.strivefit.ui.viewModel
 
 import UserProfileUpdater
@@ -162,18 +164,7 @@ class SignUpViewModel @Inject constructor(
                             .build()
                     )
                     .build()
-                SignUpEvent.GoogleSignUpClicked -> {
-                val signInRequest = BeginSignInRequest.builder()
-                    .setGoogleIdTokenRequestOptions(
-                        BeginSignInRequest.GoogleIdTokenRequestOptions.builder()
-                            .setSupported(true)
-                            .setServerClientId("YOUR_WEB_CLIENT_ID")
-                            .setFilterByAuthorizedAccounts(false)
-                            .build()
-                    )
-                    .build()
                 viewModelScope.launch { _resultFlow.emit(SignUpResult.LaunchGoogleSignIn(signInRequest)) }
-            }
             }
             is SignUpEvent.GoogleSignInSucceeded -> performGoogleSignIn(event.idToken)
         }
